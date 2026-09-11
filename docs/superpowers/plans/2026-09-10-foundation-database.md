@@ -90,7 +90,7 @@ The exact generated migration filename is recorded by Drizzle Kit in `src/db/mig
 - Produces: `parseServerEnv(input: NodeJS.ProcessEnv): ServerEnv`, where `ServerEnv` is `{ DATABASE_URL: string }`, plus the server-only `serverEnv` resolved value.
 - Produces: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:watch`, `npm run db:generate`, `npm run db:migrate`, and `npm run db:seed` scripts.
 
-- [ ] **Step 1: Scaffold the Next.js project in the current repository without touching `docs/`, `levels.json`, or `AIRPALNE INFORMATION NEW YORK.xlsx`.**
+- [ ] **Step 1: Scaffold the Next.js project in the current repository without touching `docs/` or `AIRPALNE INFORMATION NEW YORK.xlsx`.**
 
   Run the generator in a temporary directory, then copy only generated project files into the repository root. This avoids a generator refusal caused by the existing documentation and prevents overwriting it.
 
@@ -101,7 +101,7 @@ The exact generated migration filename is recorded by Drizzle Kit in `src/db/mig
   rsync -a --exclude '.git' "$workspace_tmp/chc/" ./
   ```
 
-  Keep the generator's current stable Next.js/React/Tailwind versions and its lockfile. Verify `docs/PRD.md`, `levels.json`, and `AIRPALNE INFORMATION NEW YORK.xlsx` are still present before continuing.
+  Keep the generator's current stable Next.js/React/Tailwind versions and its lockfile. Verify `docs/PRD.md` and `AIRPALNE INFORMATION NEW YORK.xlsx` are still present before continuing. Task 4 alone generates `data/new-york-standard-data.json` from that workbook.
 
 - [ ] **Step 2: Install the foundation-only server, migration, validation and test dependencies and define exact scripts.**
 
