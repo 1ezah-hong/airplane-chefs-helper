@@ -2,7 +2,7 @@
 
 **状态：** 已确认的 Architectural 技术设计  
 **日期：** 2026-09-10  
-**范围：** 上海机场、标准关卡 1–50、匿名玩家计算器与共享口令管理后台。  
+**范围：** 纽约机场、标准关卡 1–50、匿名玩家计算器与共享口令管理后台。
 **不含：** 业务代码、实施计划、玩家账户、多机场后台管理及任何 PRD 明确排除的功能。
 
 ## 1. 文档目标与范围
@@ -14,7 +14,7 @@
         ↓
 PostgreSQL 持久化并校验数据
         ↓
-玩家端读取最新上海标准数据
+玩家端读取最新纽约标准数据
         ↓
 玩家输入一次性状态与资源条件
         ↓
@@ -33,7 +33,7 @@ PostgreSQL 持久化并校验数据
 - **计算独立且可复核。** 三星求解器是无 I/O 的纯 domain module；UI、数据库与 HTTP 层都不能包含求解规则。
 - **安全边界在服务端。** 前端校验用于体验，服务端校验和数据库约束才是写入与鉴权依据。
 - **YAGNI。** 不引入 Redis、消息队列、对象存储、Supabase Auth、Realtime、Storage、RBAC、独立后端或复杂 CI/CD。
-- **为机场扩展留接口，不预建产品。** 所有标准数据带 `airport_id`；但 MVP 只 seed 上海，也不提供机场管理功能。
+- **为机场扩展留接口，不预建产品。** 所有标准数据带 `airport_id`；但 MVP 只 seed 纽约，也不提供机场管理功能。
 
 ## 3. 技术方案比较
 
@@ -119,12 +119,12 @@ Browser sessionStorage: only ephemeral result/import-result view data
 ```text
 /
 ├─ page.tsx                              城市引入页
-├─ shanghai/
-│  ├─ page.tsx                            上海计算页
+├─ new-york/
+│  ├─ page.tsx                            纽约计算页
 │  └─ result/page.tsx                     本次结果页
 └─ admin/
    ├─ page.tsx                            登录页；已登录则转 /admin/levels
-   ├─ levels/page.tsx                     上海标准关卡
+   ├─ levels/page.tsx                     纽约标准关卡
    ├─ levels/import-result/page.tsx       关卡导入结果
    ├─ categories/page.tsx                 食物分类
    ├─ foods/page.tsx                      食物升级目录
@@ -132,7 +132,7 @@ Browser sessionStorage: only ephemeral result/import-result view data
    └─ souvenirs/page.tsx                  两种纪念品配置
 ```
 
-`/` 的 18 城市路线来自静态前端配置。仅开放城市才能导航至 `/shanghai`；未开放城市既不发起标准数据读取，也不创建草稿。
+`/` 的 18 城市路线来自静态前端配置。仅开放城市才能导航至 `/new-york`；未开放城市既不发起标准数据读取，也不创建草稿。
 
 ### 6.2 Server Component 与 Client Component 原则
 
@@ -144,7 +144,7 @@ Browser sessionStorage: only ephemeral result/import-result view data
 
 - React Hook Form + Zod resolver 管理交互表单状态和字段级错误；不引入全局状态库。
 - 玩家表单失焦时做对应字段校验；提交时全量校验。UX-SPEC 所定义的自动展开、滚动到首个错误和加载禁用由 Client Component 实现。
-- 计算成功、已达三星或无解均调用同一 `calculatePlan` Server Action。结果是一次性数据，写入 `sessionStorage` 后导航至 `/shanghai/result`；结果页读取该数据。若用户直接打开或清空会话后刷新结果路径，显示“本次计算结果已失效，请返回修改输入”，不伪造历史记录。
+- 计算成功、已达三星或无解均调用同一 `calculatePlan` Server Action。结果是一次性数据，写入 `sessionStorage` 后导航至 `/new-york/result`；结果页读取该数据。若用户直接打开或清空会话后刷新结果路径，显示“本次计算结果已失效，请返回修改输入”，不伪造历史记录。
 - 回到计算页时，用户的输入来自仍在内存中的表单或已保存的 `localStorage` 草稿；不会因查看结果丢失。
 
 ### 6.4 调用、加载与错误
@@ -173,7 +173,7 @@ UI-SPEC 标为“待确认”的视觉状态在设计补充前不能凭技术人
 
 数据库连接变量只存在于 Vercel 服务端环境变量，绝不使用 `NEXT_PUBLIC_` 前缀。浏览器不拥有 database URL、service role key 或可写数据库凭证。
 
-玩家标准数据在每次新页面请求中读取最新版本。数据总量很小，不建立应用级缓存层；管理员成功变更后调用 `revalidatePath('/shanghai')` 与相应管理路由失效，确保后续玩家请求不读到旧数据。
+玩家标准数据在每次新页面请求中读取最新版本。数据总量很小，不建立应用级缓存层；管理员成功变更后调用 `revalidatePath('/new-york')`、`revalidatePath('/new-york/result')` 与相应管理路由失效，确保后续玩家请求不读到旧数据。
 
 ## 8. 数据模型
 
@@ -190,12 +190,12 @@ UI-SPEC 标为“待确认”的视觉状态在设计补充前不能凭技术人
 | Column | Type | Null / default | 约束与索引 |
 | --- | --- | --- | --- |
 | `id` | `uuid` | NOT NULL，生成 UUID | PK |
-| `slug` | `varchar(63)` | NOT NULL | UNIQUE；小写 kebab-case 检查，例如 `shanghai` |
+| `slug` | `varchar(63)` | NOT NULL | UNIQUE；小写 kebab-case 检查，例如 `new-york` |
 | `display_name` | `varchar(100)` | NOT NULL | trim 后非空 |
 | `created_at` | `timestamptz` | NOT NULL, `now()` |  |
 | `updated_at` | `timestamptz` | NOT NULL, `now()` |  |
 
-MVP migration/seed 只创建 `shanghai / 上海`。没有机场创建、删除或编辑页面。
+MVP migration/seed 只创建 `new-york / 纽约`。没有机场创建、删除或编辑页面。
 
 ### 8.3 `levels`
 
@@ -208,7 +208,7 @@ MVP migration/seed 只创建 `shanghai / 上海`。没有机场创建、删除�
 | `star_target_revenue` | `integer` | NOT NULL | CHECK `> 0` |
 | `created_at`, `updated_at` | `timestamptz` | NOT NULL, `now()` |  |
 
-唯一约束：`UNIQUE (airport_id, level_type, level_number)`。MVP 服务端额外约束上海 `level_type = standard` 且编号 `1..50`；数据库保留未来机场/关卡类型的合法扩展空间，不把“1–50”硬编码为永久全局限制。索引为 `(airport_id, level_type, level_number)`，同时满足玩家读取和管理端排序。
+唯一约束：`UNIQUE (airport_id, level_type, level_number)`。MVP 服务端额外约束纽约 `level_type = standard` 且编号 `1..50`；数据库保留未来机场/关卡类型的合法扩展空间，不把“1–50”硬编码为永久全局限制。索引为 `(airport_id, level_type, level_number)`，同时满足玩家读取和管理端排序。
 
 ### 8.4 `food_categories`
 
@@ -238,7 +238,7 @@ MVP migration/seed 只创建 `shanghai / 上海`。没有机场创建、删除�
 
 食物目录**只**保存名称、分类和固定展示顺序。绝不保存收入增量、金币成本、钻石成本、等级或前置条件；这些都是玩家的一次性输入。
 
-“每机场最多 10 项”不能用单行 CHECK 正确表达。所有新增、编辑涉及机场改变、导入都在 PostgreSQL transaction 内锁定对应 `airports` 行、统计现有目录和本次变更后数量；超过 10 时回滚并返回 `Conflict`。这避免并发写入绕过上限，而不需要业务触发器。
+“每机场最多 20 项”不能用单行 CHECK 正确表达。所有新增、编辑涉及机场改变、导入都在 PostgreSQL transaction 内锁定对应 `airports` 行、统计现有目录和本次变更后数量；超过 20 时回滚并返回 `Conflict`。这避免并发写入绕过上限，而不需要业务触发器。
 
 ### 8.6 `souvenirs`
 
@@ -253,7 +253,7 @@ MVP migration/seed 只创建 `shanghai / 上海`。没有机场创建、删除�
 | `diamond_package_price` | `integer` | NOT NULL | CHECK `>= 0` |
 | `created_at`, `updated_at` | `timestamptz` | NOT NULL, `now()` |  |
 
-唯一约束：`UNIQUE (airport_id, slot)`。seed 在上海创建 slot 1、2 两条记录；MVP 不暴露新增或删除 handler，只允许更新名称、单个收入和包价。因此该表对每个 MVP 机场最多且恰好维护两个可编辑配置，不需额外的复杂触发器。
+唯一约束：`UNIQUE (airport_id, slot)`。seed 在纽约创建 slot 1、2 两条记录；MVP 不暴露新增或删除 handler，只允许更新名称、单个收入和包价。因此该表对每个 MVP 机场最多且恰好维护两个可编辑配置，不需额外的复杂触发器。
 
 ### 8.7 不入库的玩家输入
 
@@ -261,7 +261,7 @@ MVP migration/seed 只创建 `shanghai / 上海`。没有机场创建、删除�
 
 ## 9. 城市路线配置
 
-18 个城市的固定顺序属于**前端 TypeScript 静态配置**：丹佛、悉尼、伦敦、纽约、新加坡、东京、那不勒斯、里约热内卢、开普敦、巴黎、雅加达、洛杉矶、墨西哥、孟买、札幌、柏林、上海、布宜诺斯艾利斯。每项只含 `slug`、中文名、`isOpen` 和静态场景资源引用；MVP 仅 `shanghai` 的 `isOpen` 为真。
+18 个城市的固定顺序属于**前端 TypeScript 静态配置**：丹佛、悉尼、伦敦、纽约、新加坡、东京、那不勒斯、里约热内卢、开普敦、巴黎、雅加达、洛杉矶、墨西哥、孟买、札幌、柏林、上海、布宜诺斯艾利斯。每项只含 `slug`、中文名、`isOpen` 和静态场景资源引用；MVP 仅 `new-york` 的 `isOpen` 为真，`shanghai` 为假。
 
 选择 TypeScript config，而非数据库或 JSON，理由是：路线不是后台可维护数据；未开放城市不需要业务数据；代码可在构建时校验类型并与静态资源直接关联；无须为一个固定展示清单新增查询、权限、迁移或管理页面。未来开通机场时，新增该城市的静态配置并为其 seed `airports` 记录即可。JSON 也能表示数据，但失去类型检查且没有实际维护收益；数据库会错误暗示管理员可运营路线。
 
@@ -275,10 +275,10 @@ Server Actions 用于同一 Next.js 应用内、由表单触发的登录、计�
 
 | 名称 | 形式 | 输入 | 成功输出 |
 | --- | --- | --- | --- |
-| `getCalculatorData('shanghai')` | 服务端页面读取 | 固定 city slug | 50 关卡、最多 10 项食物及分类、2 个纪念品 |
+| `getCalculatorData('new-york')` | 服务端页面读取 | 固定 city slug | 50 关卡、最多 20 项食物及分类、2 个纪念品 |
 | `calculatePlan(input)` | Server Action | 玩家一次性计算输入 | `already_starred`、`success` 或 `no_solution` 的判别联合 |
 
-`calculatePlan` 不信任客户端传来的目标收入、食物名称、分类、纪念品收入或包价。它以请求中的 level、food id 和玩家动态数值为索引，在服务端读取当前上海标准数据，再调用计算器。因此客户端不能把旧目录或伪造配置当作权威输入。
+`calculatePlan` 不信任客户端传来的目标收入、食物名称、分类、纪念品收入或包价。它以请求中的 level、food id 和玩家动态数值为索引，在服务端读取当前纽约标准数据，再调用计算器。因此客户端不能把旧目录或伪造配置当作权威输入。
 
 ### 10.3 管理接口
 
@@ -367,9 +367,9 @@ calculateOptimalPlan(input: CalculationInput): CalculationResult
 
 ### 11.3 枚举策略与复杂度
 
-MVP 的上限为 10 项食物、2 种纪念品。因此采用直接、可读、可证明的枚举，不提前引入整数规划、动态规划服务或第三方优化器。
+MVP 的上限为 20 项食物、2 种纪念品。纽约已确认 12 项；直接枚举仍是 MVP 可读且可证明的默认方案，不提前引入整数规划、动态规划服务或第三方优化器。
 
-1. 枚举所有已选食物子集，至多 `2^10 = 1,024` 个。
+1. 枚举所有已选食物子集；纽约当前最多 `2^12 = 4,096` 个，产品目录上限为 `2^20 = 1,048,576` 个。
 2. 对每个子集先计算食物收入与成本，超过预算者立即跳过。
 3. 若剩余缺口不大于 0，形成“不使用纪念品”的候选。
 4. 对允许的一种或两种纪念品，枚举第一种数量 `0..ceil(remainingGap / perItemRevenue)`；第二种仅取补齐余下缺口的最小整数数量。若仅允许一种，则直接取最小数量。任何更高数量不会降低成本，且在相同包成本下会被“纪念品使用数量更少”规则支配。
@@ -419,10 +419,10 @@ Session cookie 必须设置 `HttpOnly`、`Secure`（production）、`SameSite=La
 
 | 数据集 | 必须列 | 唯一键 |
 | --- | --- | --- |
-| 上海标准关卡 | `airport`、`level_type`、`level_number`、`star_target_revenue` | `airport + level_type + level_number` |
-| 上海食物升级目录 | `name`、`category` | 上海机场内标准化 `name` |
+| 纽约标准关卡 | `airport`、`level_type`、`level_number`、`star_target_revenue` | `airport + level_type + level_number` |
+| 纽约食物升级目录 | `name`、`category` | 纽约机场内标准化 `name` |
 
-关卡导入要求机场为“上海”、类型为“标准关卡”、编号为 1–50、目标收入为正整数。食物导入要求分类已经存在，导入后目录总数不超过 10。文件中不存在的既有记录必须保留；同键记录代表更新而不是删除冲突。
+关卡导入要求机场为“纽约”、类型为“标准关卡”、编号为 1–50、目标收入为正整数。食物导入要求分类已经存在，导入后目录总数不超过 20。文件中不存在的既有记录必须保留；同键记录代表更新而不是删除冲突。
 
 ### 13.2 完整流程
 
@@ -449,8 +449,8 @@ schema validation + business validation + 文件内重复检查
 - 仅接受 `.csv`、`.xlsx`，并同时检查扩展名、MIME 线索和实际解析结果；设置 1 MB 服务端文件上限。MVP 的 50/10 条数据远小于该限制。
 - 使用 `xlsx` 读取工作簿的首个数据 sheet；CSV 按 UTF-8（含 BOM）解析。拒绝空文件、缺列、空表头、无法解析的工作簿和额外业务不合法行。
 - 先积累**所有**行错误。每项格式为 `{ row, field, value, reason }`；行号以用户可见的表头后第一条数据为第 2 行计数。
-- 所有行基础校验通过后才查询数据库。食物类别查找、名称冲突/归一化冲突、文件内重复、关卡范围和 10 项上限都必须报错。
-- 最终写入使用一个 PostgreSQL transaction。关卡与食物均为按唯一键 `INSERT ... ON CONFLICT DO UPDATE` 的语义；事务失败会整体回滚。对食物目录同时锁机场行，防止并发导入突破 10 项。
+- 所有行基础校验通过后才查询数据库。食物类别查找、名称冲突/归一化冲突、文件内重复、关卡范围和 20 项上限都必须报错。
+- 最终写入使用一个 PostgreSQL transaction。关卡与食物均为按唯一键 `INSERT ... ON CONFLICT DO UPDATE` 的语义；事务失败会整体回滚。对食物目录同时锁机场行，防止并发导入突破 20 项。
 - 失败导入不产生部分更新、导入历史、临时表、对象文件或回滚功能。
 
 导入文件只在该请求的 Node memory 内读取、解析和丢弃；不保存到 Supabase Storage、Vercel Blob 或本地磁盘。
@@ -461,7 +461,7 @@ schema validation + business validation + 文件内重复检查
 
 ## 14. 导出
 
-只有上海标准关卡和食物升级目录可以导出为 CSV 或 XLSX；纪念品与食物分类不在导出范围。
+只有纽约标准关卡和食物升级目录可以导出为 CSV 或 XLSX；纪念品与食物分类不在导出范围。
 
 受保护的 `GET` Route Handler 从 PostgreSQL 读取当前标准数据，在请求内生成 `Buffer`，设置正确的 `Content-Type`、UTF-8 文件名和 `Content-Disposition: attachment` 后直接下载。CSV 使用 RFC 4180 兼容转义，并对以 `=`, `+`, `-`, `@` 开头的文本值做公式注入防护；XLSX 输出显式字符串/整数单元格，不执行工作簿公式。
 
@@ -476,7 +476,7 @@ key 使用带范围的名字：`chefs-help-chefs:player-draft`。建议 schema�
 ```text
 {
   version: 1,
-  city: "shanghai",
+  city: "new-york",
   level: number | null,
   currentRevenue: string,
   budgets: { gold: string, diamond: string },
@@ -510,7 +510,7 @@ key 使用带范围的名字：`chefs-help-chefs:player-draft`。建议 schema�
 | 层 | 职责 | 例子 |
 | --- | --- | --- |
 | 前端 | 及时提示、禁用明显非法提交、引导定位 | 当前收入为空、已选食物缺成本、纪念品库存缺失 |
-| 服务端 | 权威 schema 与业务规则、鉴权、重新读取标准数据 | 预算整数、上海 1–50、food 属于上海、目录上限、分类引用 |
+| 服务端 | 权威 schema 与业务规则、鉴权、重新读取标准数据 | 预算整数、纽约 1–50、food 属于纽约、目录上限、分类引用 |
 | 数据库 | 持久化完整性与并发最后防线 | FK、UNIQUE、CHECK、RESTRICT、transaction |
 
 Zod schema 分为：玩家计算 input、登录 input、单条 Level/Category/Food/Souvenir input、导入 row。前端可复用其中安全的一部分，但绝不以浏览器验证代替服务端验证。所有数值先以字符串接收，明确拒绝空值（需填写时）、小数、科学计数法、负数、超出 safe integer 的数字和隐式类型转换。
@@ -543,9 +543,9 @@ Zod schema 分为：玩家计算 input、登录 input、单条 Level/Category/Fo
 
 ## 19. 性能
 
-- 玩家所需标准数据最大约为 50 Level、10 Food、2 Souvenir，单次数据库查询与响应体都很小；不分页、不建 Redis、不做复杂缓存。
+- 玩家所需标准数据当前为 50 Level、12 Food、2 Souvenir，产品目录上限为 20 Food；单次数据库查询与响应体都很小，不分页、不建 Redis、不做复杂缓存。
 - 城市路线、图片和图标是构建时静态资源，可由 CDN 缓存。城市配置立即渲染，图片失败仍保留开放状态和重试。
-- 计算放在服务端，原因是结果总与最新权威标准数据配套，且可以复用同一 domain module 和统一验证；计算规模最多 1,024 个食物组合及很小的纪念品候选集，远低于一次普通请求可承受范围。
+- 计算放在服务端，原因是结果总与最新权威标准数据配套，且可以复用同一 domain module 和统一验证；纽约当前 12 项食物时规模为 4,096 个组合及很小的纪念品候选集，远低于一次普通请求可承受范围。目录产品上限为 20，未来某机场实际目录超过 12 时先以 20 项的 1,048,576 子集压测直接枚举，再决定是否需要另立性能设计；本 MVP 不预先引入复杂优化器。
 - 管理端列表虽然只有几十行，仍按 UX-SPEC 支持搜索与基础分页 UI；无需服务端复杂分页、全文搜索或索引优化。已有机场/名称/目录索引已足够。
 
 ## 20. 测试策略
@@ -571,7 +571,7 @@ Zod schema 分为：玩家计算 input、登录 input、单条 Level/Category/Fo
 
 - 管理 session 缺失时页面 Action、import/export 均拒绝；
 - Level/Food/Category/Souvenir CRUD 的 Zod 与 DB 约束；
-- 被引用分类不可删除；食物目录第 11 项不可写入；
+- 被引用分类不可删除；食物目录第 21 项不可写入；
 - 管理保存后玩家读取到新标准数据；
 - 合法导入按唯一键 upsert，未出现记录保留；
 - 导入单个错误或事务失败时完全无数据变更；
@@ -581,7 +581,7 @@ Zod schema 分为：玩家计算 input、登录 input、单条 Level/Category/Fo
 
 Playwright 覆盖关键用户旅程，而非追求无意义覆盖率：
 
-1. 城市引入页默认上海、未开放城市不可进入。
+1. 城市引入页默认纽约、未开放城市不可进入。
 2. 玩家填写合法输入，获得唯一成功方案；回到表单仍保留输入。
 3. 已达三星、输入不足、字段错误、无解和服务失败的规定展示。
 4. 草稿自动恢复、确认清除后不恢复。
@@ -613,7 +613,7 @@ Playwright 覆盖关键用户旅程，而非追求无意义覆盖率：
 - `main` 对应 Production；每个分支/PR 可由 Vercel 创建 Preview。
 - Preview 必须使用独立的非生产数据库环境/变量，绝不指向生产数据；可使用一个小型 shared staging DB，且不将真实管理员口令放入 Preview。
 - Schema 变更通过受版本控制的 Drizzle migration 执行。部署前先备份，再在对应环境运行 migration；不在页面运行时自动改 schema。
-- 初始 seed 仅写入上海机场、标准关卡初始数据、已有分类/食物目录和固定两种纪念品。seed 必须可重复执行，不覆盖管理员后续维护的数据，除非由明确的受控初始化流程执行。
+- 初始 seed 仅写入纽约机场、已确认的 50 个标准关卡、4 个食物分类、12 项食物目录和固定两种纪念品。标准数据由 `AIRPALNE INFORMATION NEW YORK.xlsx` 规范化而来。seed 必须可重复执行，不覆盖管理员后续维护的数据，除非由明确的受控初始化流程执行。
 - 日常运营只通过受保护管理端修改标准数据；紧急数据库修复应记录在 migration/运维记录中，而非成为常规工作流。
 
 ## 22. 未来机场扩展
@@ -626,7 +626,7 @@ Playwright 覆盖关键用户旅程，而非追求无意义覆盖率：
 4. 路由由 `/[citySlug]` 或新增同构路径读取对应机场，计算器复用同一 domain module；查询永远按 `airport_id` 限定。
 5. 如产品届时允许后台维护新机场，另立产品与技术规格；本 MVP 不提供机场 CRUD 或跨机场管理 UI。
 
-因此扩展是新增数据、配置和有限路由泛化，而不是迁移 Shanghai 硬编码数据库或重写算法。
+因此扩展是新增数据、配置和有限路由泛化，而不是迁移 New York 硬编码数据库或重写算法。
 
 ## 23. 建议项目目录
 
@@ -635,7 +635,7 @@ src/
 ├─ app/
 │  ├─ (player)/
 │  │  ├─ page.tsx
-│  │  └─ shanghai/
+│  │  └─ new-york/
 │  ├─ admin/
 │  └─ api/admin/
 ├─ components/
@@ -678,8 +678,8 @@ src/
 
 - [ ] 一个 Next.js 应用即可同时部署玩家端、管理端、服务端计算和文件接口。
 - [ ] 仅 Supabase PostgreSQL 持久化标准数据；玩家输入、结果和草稿不入库。
-- [ ] 数据库有机场外键、所列唯一约束、CHECK、RESTRICT 与索引；上海仍是唯一 MVP 数据集。
-- [ ] 食物目录不含收入/成本字段，且无法通过单条或导入操作超过 10 项。
+- [ ] 数据库有机场外键、所列唯一约束、CHECK、RESTRICT 与索引；纽约仍是唯一 MVP 数据集。
+- [ ] 食物目录不含收入/成本字段，且无法通过单条或导入操作超过 20 项。
 - [ ] 管理员共享口令仅存在部署环境变量；未认证访问不能读取或修改管理数据，也不能导入/导出。
 - [ ] 计算器是独立纯函数，满足收入、预算、纪念品包数和两种 lexicographic 偏好的全部规则，并且平局稳定。
 - [ ] 已达三星、无解和成功均作为正常业务结果；无解不会成为 500。
@@ -694,5 +694,5 @@ src/
 
 1. **中国大陆可达性与区域：** 主要玩家实际网络位置、域名和 Vercel/Supabase 区域必须在发布前进行真机网络验证；若可达性不达标，托管供应商是唯一可能需要重新评估的架构边界。
 2. **UI-SPEC 待确认视觉：** 玩家端桌面断点、未开放城市状态、错误/focus/disabled/loading、已达三星画板、食物结果项、纪念品库存展开；管理端错误/空/骨架/窄屏与 Figma 导入确认按钮的视觉映射，均须由设计补充后实现。
-3. **初始标准数据来源：** `levels.json` 的 `points` 映射需在 seed 前筛选为上海标准关卡 1–50，并由产品方最终核验；本规范不自行修改数据。
+3. **初始标准数据来源：** `AIRPALNE INFORMATION NEW YORK.xlsx` 是纽约标准数据的唯一来源。Foundation plan 在 seed 前将其规范化为受 Zod 校验的版本控制 JSON，只允许 trim 字符串和修复源列名/工作表名的结构命名；不得改变任何业务值。
 4. **共享口令交接：** 上线前必须生成高强度口令、以 hash 写入生产环境变量，并为部署负责人建立安全的保管/轮换流程；产品不增加改密页面。
