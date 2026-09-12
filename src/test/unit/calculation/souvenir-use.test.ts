@@ -50,7 +50,25 @@ describe('souvenir calculations', () => {
   });
 
   it('includes the greatest budget-feasible partial quantity for no-solution maximum revenue', () => {
-    expect(enumerateSouvenirQuantityPairs(500, [hat], 2)).toContainEqual([8]);
+    expect([...enumerateSouvenirQuantityPairs(500, [hat], 2)]).toContainEqual([8]);
+  });
+
+  it('yields the first pair before evaluating later first-slot quantities', () => {
+    let inventoryReads = 0;
+    const deferredHat = {
+      ...hat,
+      get inventory(): number {
+        inventoryReads += 1;
+        if (inventoryReads > 3) throw new Error('later quantity should remain unevaluated');
+        return hat.inventory;
+      },
+    };
+
+    const iterator = enumerateSouvenirQuantityPairs(120, [deferredHat, apron], null);
+
+    expect(iterator.next()).toEqual({ done: false, value: [0, 2] });
+    expect(inventoryReads).toBe(3);
+    expect(() => iterator.next()).toThrow('later quantity should remain unevaluated');
   });
 
   it('rejects a negative quantity used', () => {
@@ -58,11 +76,11 @@ describe('souvenir calculations', () => {
   });
 
   it('rejects a negative remaining gap', () => {
-    expect(() => enumerateSouvenirQuantityPairs(-1, [], null)).toThrow(CalculationInputError);
+    expect(() => [...enumerateSouvenirQuantityPairs(-1, [], null)]).toThrow(CalculationInputError);
   });
 
   it('rejects a negative diamond budget', () => {
-    expect(() => enumerateSouvenirQuantityPairs(500, [hat], -1)).toThrow(CalculationInputError);
+    expect(() => [...enumerateSouvenirQuantityPairs(500, [hat], -1)]).toThrow(CalculationInputError);
   });
 
   it('rejects a NaN quantity used', () => {
@@ -70,19 +88,19 @@ describe('souvenir calculations', () => {
   });
 
   it('rejects a fractional remaining gap', () => {
-    expect(() => enumerateSouvenirQuantityPairs(500.5, [hat], null)).toThrow(CalculationInputError);
+    expect(() => [...enumerateSouvenirQuantityPairs(500.5, [hat], null)]).toThrow(CalculationInputError);
   });
 
   it('rejects an unsafe diamond budget', () => {
-    expect(() => enumerateSouvenirQuantityPairs(500, [hat], Number.MAX_SAFE_INTEGER + 1)).toThrow(CalculationInputError);
+    expect(() => [...enumerateSouvenirQuantityPairs(500, [hat], Number.MAX_SAFE_INTEGER + 1)]).toThrow(CalculationInputError);
   });
 
   it('rejects a third souvenir instead of dropping it from the pair enumeration', () => {
-    expect(() => enumerateSouvenirQuantityPairs(500, [hat, apron, hat], null)).toThrow(CalculationInputError);
+    expect(() => [...enumerateSouvenirQuantityPairs(500, [hat, apron, hat], null)]).toThrow(CalculationInputError);
   });
 
   it('keeps two-slot quantity candidates ordered by slot with finite bounds', () => {
-    expect(enumerateSouvenirQuantityPairs(120, [apron, hat], null)).toEqual([
+    expect([...enumerateSouvenirQuantityPairs(120, [apron, hat], null)]).toEqual([
       [0, 2],
       [1, 1],
       [2, 0],
@@ -90,10 +108,10 @@ describe('souvenir calculations', () => {
   });
 
   it('keeps a finite success-bound quantity for a positive-price souvenir with unlimited diamonds', () => {
-    expect(enumerateSouvenirQuantityPairs(500, [hat], null)).toEqual([[9]]);
+    expect([...enumerateSouvenirQuantityPairs(500, [hat], null)]).toEqual([[9]]);
   });
 
   it('keeps a finite success-bound quantity for a zero-price souvenir with a finite diamond budget', () => {
-    expect(enumerateSouvenirQuantityPairs(250, [{ ...apron, diamondPackagePrice: 0 }], 0)).toEqual([[3]]);
+    expect([...enumerateSouvenirQuantityPairs(250, [{ ...apron, diamondPackagePrice: 0 }], 0)]).toEqual([[3]]);
   });
 });

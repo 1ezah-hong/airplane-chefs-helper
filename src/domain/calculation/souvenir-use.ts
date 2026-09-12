@@ -58,34 +58,29 @@ function maximumUsableQuantity(
   );
 }
 
-export function enumerateSouvenirQuantityPairs(
+export function* enumerateSouvenirQuantityPairs(
   remainingGap: number,
   souvenirs: readonly AllowedSouvenir[],
   diamondBudgetRemaining: number | null,
-): readonly (readonly number[])[] {
+): Generator<readonly number[]> {
   assertSafeInteger(remainingGap, 'remainingGap');
   if (diamondBudgetRemaining !== null) assertSafeInteger(diamondBudgetRemaining, 'diamondBudgetRemaining');
   if (souvenirs.length > 2) throw new CalculationInputError('souvenirs must contain at most 2 entries');
-  if (souvenirs.length === 0) return remainingGap === 0 ? [[]] : [];
+  if (souvenirs.length === 0) {
+    if (remainingGap === 0) yield [];
+    return;
+  }
 
   const ordered = [...souvenirs].sort((left, right) => left.slot - right.slot);
   if (ordered.length === 1) {
     const maximum = maximumUsableQuantity(ordered[0], diamondBudgetRemaining, remainingGap);
     const minimum = ceilDivide(remainingGap, ordered[0].perItemRevenue);
-    return minimum === maximum ? [[minimum]] : [[minimum], [maximum]];
+    yield [minimum];
+    if (maximum !== minimum) yield [maximum];
+    return;
   }
 
   const [first, second] = ordered;
-  const pairs: number[][] = [];
-  const seen = new Set<string>();
-  const append = (firstQuantity: number, secondQuantity: number): void => {
-    const key = `${firstQuantity}:${secondQuantity}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      pairs.push([firstQuantity, secondQuantity]);
-    }
-  };
-
   const firstMaximum = maximumUsableQuantity(first, diamondBudgetRemaining, remainingGap);
   for (let firstQuantity = 0; firstQuantity <= firstMaximum; firstQuantity += 1) {
     const firstUse = createSouvenirUse(first, firstQuantity);
@@ -99,9 +94,7 @@ export function enumerateSouvenirQuantityPairs(
       : subtractSafeIntegers(diamondBudgetRemaining, firstUse.souvenirUse.diamondCost);
     const secondMaximum = maximumUsableQuantity(second, residualBudget, residualGap);
     const secondMinimum = residualGap === 0 ? 0 : ceilDivide(residualGap, second.perItemRevenue);
-    append(firstQuantity, secondMinimum);
-    append(firstQuantity, secondMaximum);
+    yield [firstQuantity, secondMinimum];
+    if (secondMaximum !== secondMinimum) yield [firstQuantity, secondMaximum];
   }
-
-  return pairs;
 }

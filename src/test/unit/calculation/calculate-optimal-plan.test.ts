@@ -186,4 +186,33 @@ describe('calculateOptimalPlan', () => {
     const two = { id: 'two', name: 'Two', categoryName: '饮料', displayOrder: 2, revenueDelta: 100, goldCost: 1, diamondCost: 1 };
     expect(calculateOptimalPlan({ ...common, foods: [one, two] })).toEqual(calculateOptimalPlan({ ...common, foods: [two, one] }));
   });
+
+  it('completes a valid two-slot calculation at the twenty-food input limit', () => {
+    const result = calculateOptimalPlan({
+      targetRevenue: 130,
+      currentRevenue: 0,
+      goldBudget: 0,
+      diamondBudget: 1,
+      preference: 'diamond_first',
+      foods: Array.from({ length: 20 }, (_, index) => ({
+        id: `food-${index + 1}`,
+        name: `Food ${index + 1}`,
+        categoryName: '主食',
+        displayOrder: index + 1,
+        revenueDelta: 10 + index,
+        goldCost: 1,
+        diamondCost: 0,
+      })),
+      souvenirs: [
+        { slot: 1, name: '自由帽', inventory: 0, perItemRevenue: 60, packageSize: 5, diamondPackagePrice: 1 },
+        { slot: 2, name: '苹果徽章', inventory: 0, perItemRevenue: 70, packageSize: 5, diamondPackagePrice: 1 },
+      ],
+    });
+
+    expect(result.status).toBe('success');
+    if (result.status !== 'success') throw new Error('expected a successful pressure-sanity result');
+    expect(result.finalRevenue).toBeGreaterThanOrEqual(130);
+    expect(result.goldCost).toBeLessThanOrEqual(0);
+    expect(result.diamondCost).toBeLessThanOrEqual(1);
+  });
 });

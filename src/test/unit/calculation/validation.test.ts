@@ -31,10 +31,19 @@ describe('assertCalculationInput', () => {
     expect(() => assertCalculationInput(value)).toThrow('foods must have unique displayOrder values');
   });
 
-  it('rejects conflicting souvenir slots and package sizes other than five', () => {
+  it('rejects package sizes other than five', () => {
     const value = input();
     value.souvenirs = [{ ...value.souvenirs[0], packageSize: 4 } as unknown as (typeof value.souvenirs)[number]];
     expect(() => assertCalculationInput(value)).toThrow('packageSize must equal 5');
+  });
+
+  it('rejects two otherwise valid souvenirs assigned to the same slot', () => {
+    const value = input();
+    value.souvenirs = [
+      value.souvenirs[0],
+      { ...value.souvenirs[0], name: '重复槽位' },
+    ];
+    expect(() => assertCalculationInput(value)).toThrow('souvenirs must have unique slot values');
   });
 
   it('rejects a missing candidate when a positive gap remains', () => {

@@ -1,4 +1,12 @@
-import { budgetRemaining, compareCandidates, isWithinBudget, makeCandidate, type PlanCandidate } from './candidate';
+import {
+  budgetRemaining,
+  compareCandidates,
+  isWithinBudget,
+  makeCandidate,
+  prepareCandidateFoods,
+  prepareFoodDirectory,
+  type PlanCandidate,
+} from './candidate';
 import { calculateGap, enumerateFoodSubsets } from './food-subsets';
 import { addSafeIntegers, subtractSafeIntegers } from './integers';
 import { createSouvenirUse, enumerateSouvenirQuantityPairs } from './souvenir-use';
@@ -17,6 +25,7 @@ export function calculateOptimalPlan(input: CalculationInput): CalculationResult
   if (gap === 0) return { ...summary, status: 'already_starred', gap: 0 };
 
   const orderedSouvenirs = [...input.souvenirs].sort((left, right) => left.slot - right.slot);
+  const foodDirectory = prepareFoodDirectory(input.foods);
   let bestSuccessfulCandidate: PlanCandidate | undefined;
   let maxAdditionalRevenue = 0;
   for (const foodSubset of enumerateFoodSubsets(input.foods)) {
@@ -25,6 +34,7 @@ export function calculateOptimalPlan(input: CalculationInput): CalculationResult
 
     const remainingGap = foodSubset.addedRevenue >= gap ? 0 : subtractSafeIntegers(gap, foodSubset.addedRevenue);
     const remainingDiamondBudget = budgetRemaining(foodSubset.diamondCost, input.diamondBudget);
+    const preparedFoods = prepareCandidateFoods(foodSubset.selectedFoods, foodDirectory);
     // A feasible food-only subset still contributes to the no-solution maximum.
     const quantityPairs = orderedSouvenirs.length === 0
       ? [[]]
@@ -32,8 +42,8 @@ export function calculateOptimalPlan(input: CalculationInput): CalculationResult
     for (const quantities of quantityPairs) {
       const souvenirCalculations = orderedSouvenirs.map((souvenir, index) => createSouvenirUse(souvenir, quantities[index]));
       const candidate = makeCandidate(
-        foodSubset.selectedFoods, foodSubset.addedRevenue, foodSubset.goldCost,
-        foodSubset.diamondCost, souvenirCalculations, input.foods,
+        preparedFoods, foodSubset.addedRevenue, foodSubset.goldCost,
+        foodSubset.diamondCost, souvenirCalculations,
       );
       if (!isWithinBudget(candidate, input.goldBudget, input.diamondBudget)) continue;
       maxAdditionalRevenue = Math.max(maxAdditionalRevenue, candidate.addedRevenue);

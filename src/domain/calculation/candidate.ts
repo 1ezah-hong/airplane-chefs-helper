@@ -12,31 +12,54 @@ export interface PlanCandidate {
   stableDirectoryVector: readonly number[];
 }
 
-export function makeCandidate(
+export interface FoodDirectory {
+  orderedFoodIds: readonly string[];
+}
+
+export interface PreparedCandidateFoods {
+  selectedFoods: readonly FoodCandidate[];
+  stableFoodVector: readonly number[];
+}
+
+export function prepareFoodDirectory(allFoods: readonly FoodCandidate[]): FoodDirectory {
+  return {
+    orderedFoodIds: [...allFoods]
+      .sort((left, right) => left.displayOrder - right.displayOrder)
+      .map((food) => food.id),
+  };
+}
+
+export function prepareCandidateFoods(
   selectedFoods: readonly FoodCandidate[],
+  directory: FoodDirectory,
+): PreparedCandidateFoods {
+  const selectedIds = new Set(selectedFoods.map((food) => food.id));
+  return {
+    selectedFoods,
+    stableFoodVector: directory.orderedFoodIds.map((id) => selectedIds.has(id) ? 1 : 0),
+  };
+}
+
+export function makeCandidate(
+  preparedFoods: PreparedCandidateFoods,
   foodRevenue: number,
   foodGoldCost: number,
   foodDiamondCost: number,
   souvenirCalculations: readonly CalculatedSouvenirUse[],
-  allFoods: readonly FoodCandidate[],
 ): PlanCandidate {
-  const selectedIds = new Set(selectedFoods.map((food) => food.id));
-  // Selected = 1 is a fixed internal convention, not a preference for earlier foods.
-  const foodVector = [...allFoods]
-    .sort((left, right) => left.displayOrder - right.displayOrder)
-    .map((food) => selectedIds.has(food.id) ? 1 : 0);
   const quantityForSlot = (slot: 1 | 2): number => souvenirCalculations
     .find((calculation) => calculation.souvenirUse.slot === slot)?.souvenirUse.quantityUsed ?? 0;
   const slotQuantities: [number, number] = [quantityForSlot(1), quantityForSlot(2)];
 
   return {
-    selectedFoods,
+    selectedFoods: preparedFoods.selectedFoods,
     souvenirCalculations,
     addedRevenue: addSafeIntegers(foodRevenue, ...souvenirCalculations.map((calculation) => calculation.addedRevenue)),
     goldCost: foodGoldCost,
     diamondCost: addSafeIntegers(foodDiamondCost, ...souvenirCalculations.map((calculation) => calculation.souvenirUse.diamondCost)),
     slotQuantities,
-    stableDirectoryVector: [...foodVector, ...slotQuantities],
+    // Selected = 1 is a fixed internal convention, not a preference for earlier foods.
+    stableDirectoryVector: [...preparedFoods.stableFoodVector, ...slotQuantities],
   };
 }
 
