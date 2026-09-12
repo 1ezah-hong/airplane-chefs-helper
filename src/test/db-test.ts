@@ -1,7 +1,4 @@
-import { config } from 'dotenv';
 import { createDatabase, type DatabaseHandle } from '@/db/client';
-
-config({ path: '.env.local', quiet: true });
 
 export function getTestDatabase(): DatabaseHandle {
   const connectionString = process.env.TEST_DATABASE_URL;
