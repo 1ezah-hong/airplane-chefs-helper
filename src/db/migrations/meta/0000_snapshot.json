@@ -1,0 +1,589 @@
+{
+  "id": "a22054e9-6356-4e99-b489-1ce4933d7bcd",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.airports": {
+      "name": "airports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(63)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "airports_slug_unique": {
+          "name": "airports_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "airports_slug_format_check": {
+          "name": "airports_slug_format_check",
+          "value": "\"airports\".\"slug\" ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'"
+        },
+        "airports_display_name_nonempty_check": {
+          "name": "airports_display_name_nonempty_check",
+          "value": "char_length(btrim(\"airports\".\"display_name\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.levels": {
+      "name": "levels",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "airport_id": {
+          "name": "airport_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level_type": {
+          "name": "level_type",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level_number": {
+          "name": "level_number",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "star_target_revenue": {
+          "name": "star_target_revenue",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "levels_airport_type_number_idx": {
+          "name": "levels_airport_type_number_idx",
+          "columns": [
+            {
+              "expression": "airport_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "level_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "level_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "levels_airport_id_airports_id_fk": {
+          "name": "levels_airport_id_airports_id_fk",
+          "tableFrom": "levels",
+          "tableTo": "airports",
+          "columnsFrom": [
+            "airport_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "levels_airport_type_number_unique": {
+          "name": "levels_airport_type_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "airport_id",
+            "level_type",
+            "level_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "levels_type_nonempty_check": {
+          "name": "levels_type_nonempty_check",
+          "value": "char_length(btrim(\"levels\".\"level_type\")) > 0"
+        },
+        "levels_number_positive_check": {
+          "name": "levels_number_positive_check",
+          "value": "\"levels\".\"level_number\" >= 1"
+        },
+        "levels_target_positive_check": {
+          "name": "levels_target_positive_check",
+          "value": "\"levels\".\"star_target_revenue\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.food_categories": {
+      "name": "food_categories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "airport_id": {
+          "name": "airport_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_key": {
+          "name": "name_key",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "food_categories_airport_idx": {
+          "name": "food_categories_airport_idx",
+          "columns": [
+            {
+              "expression": "airport_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "food_categories_airport_id_airports_id_fk": {
+          "name": "food_categories_airport_id_airports_id_fk",
+          "tableFrom": "food_categories",
+          "tableTo": "airports",
+          "columnsFrom": [
+            "airport_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "food_categories_airport_name_key_unique": {
+          "name": "food_categories_airport_name_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "airport_id",
+            "name_key"
+          ]
+        },
+        "food_categories_id_airport_unique": {
+          "name": "food_categories_id_airport_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "airport_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "food_categories_name_nonempty_check": {
+          "name": "food_categories_name_nonempty_check",
+          "value": "char_length(btrim(\"food_categories\".\"name\")) > 0"
+        },
+        "food_categories_name_key_nonempty_check": {
+          "name": "food_categories_name_key_nonempty_check",
+          "value": "char_length(btrim(\"food_categories\".\"name_key\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.foods": {
+      "name": "foods",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "airport_id": {
+          "name": "airport_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_key": {
+          "name": "name_key",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "foods_airport_display_order_idx": {
+          "name": "foods_airport_display_order_idx",
+          "columns": [
+            {
+              "expression": "airport_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "display_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "foods_airport_id_airports_id_fk": {
+          "name": "foods_airport_id_airports_id_fk",
+          "tableFrom": "foods",
+          "tableTo": "airports",
+          "columnsFrom": [
+            "airport_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "foods_category_airport_fk": {
+          "name": "foods_category_airport_fk",
+          "tableFrom": "foods",
+          "tableTo": "food_categories",
+          "columnsFrom": [
+            "category_id",
+            "airport_id"
+          ],
+          "columnsTo": [
+            "id",
+            "airport_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "foods_airport_name_key_unique": {
+          "name": "foods_airport_name_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "airport_id",
+            "name_key"
+          ]
+        },
+        "foods_airport_display_order_unique": {
+          "name": "foods_airport_display_order_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "airport_id",
+            "display_order"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "foods_name_nonempty_check": {
+          "name": "foods_name_nonempty_check",
+          "value": "char_length(btrim(\"foods\".\"name\")) > 0"
+        },
+        "foods_name_key_nonempty_check": {
+          "name": "foods_name_key_nonempty_check",
+          "value": "char_length(btrim(\"foods\".\"name_key\")) > 0"
+        },
+        "foods_display_order_positive_check": {
+          "name": "foods_display_order_positive_check",
+          "value": "\"foods\".\"display_order\" >= 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.souvenirs": {
+      "name": "souvenirs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "airport_id": {
+          "name": "airport_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slot": {
+          "name": "slot",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "per_item_revenue": {
+          "name": "per_item_revenue",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "package_size": {
+          "name": "package_size",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 5
+        },
+        "diamond_package_price": {
+          "name": "diamond_package_price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "souvenirs_airport_idx": {
+          "name": "souvenirs_airport_idx",
+          "columns": [
+            {
+              "expression": "airport_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "souvenirs_airport_id_airports_id_fk": {
+          "name": "souvenirs_airport_id_airports_id_fk",
+          "tableFrom": "souvenirs",
+          "tableTo": "airports",
+          "columnsFrom": [
+            "airport_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "souvenirs_airport_slot_unique": {
+          "name": "souvenirs_airport_slot_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "airport_id",
+            "slot"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "souvenirs_slot_check": {
+          "name": "souvenirs_slot_check",
+          "value": "\"souvenirs\".\"slot\" in (1, 2)"
+        },
+        "souvenirs_name_nonempty_check": {
+          "name": "souvenirs_name_nonempty_check",
+          "value": "char_length(btrim(\"souvenirs\".\"name\")) > 0"
+        },
+        "souvenirs_revenue_positive_check": {
+          "name": "souvenirs_revenue_positive_check",
+          "value": "\"souvenirs\".\"per_item_revenue\" > 0"
+        },
+        "souvenirs_package_size_five_check": {
+          "name": "souvenirs_package_size_five_check",
+          "value": "\"souvenirs\".\"package_size\" = 5"
+        },
+        "souvenirs_diamond_price_nonnegative_check": {
+          "name": "souvenirs_diamond_price_nonnegative_check",
+          "value": "\"souvenirs\".\"diamond_package_price\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
