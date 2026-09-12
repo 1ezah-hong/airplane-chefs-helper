@@ -25,9 +25,15 @@ describe('assertCalculationInput', () => {
     expect(() => assertCalculationInput(value)).toThrow('foods must have unique id values');
   });
 
+  it('rejects a duplicated display order even with distinct food ids', () => {
+    const value = input();
+    value.foods = [...value.foods, { ...value.foods[0], id: 'food-b' }];
+    expect(() => assertCalculationInput(value)).toThrow('foods must have unique displayOrder values');
+  });
+
   it('rejects conflicting souvenir slots and package sizes other than five', () => {
     const value = input();
-    value.souvenirs = [{ ...value.souvenirs[0], packageSize: 4 }];
+    value.souvenirs = [{ ...value.souvenirs[0], packageSize: 4 } as unknown as (typeof value.souvenirs)[number]];
     expect(() => assertCalculationInput(value)).toThrow('packageSize must equal 5');
   });
 
