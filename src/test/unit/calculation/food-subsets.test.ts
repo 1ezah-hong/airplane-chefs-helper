@@ -50,12 +50,18 @@ describe('food subsets', () => {
     const laterFood = {
       ...foods[0],
       get revenueDelta(): number {
-        throw new Error('later food values should remain unevaluated');
+        throw new Error('later food revenue should remain unevaluated');
+      },
+      get goldCost(): number {
+        throw new Error('later food gold cost should remain unevaluated');
+      },
+      get diamondCost(): number {
+        throw new Error('later food diamond cost should remain unevaluated');
       },
     };
     const iterator = enumerateFoodSubsets([laterFood]);
 
     expect(iterator.next().value).toEqual({ selectedFoods: [], addedRevenue: 0, goldCost: 0, diamondCost: 0 });
-    expect(() => iterator.next()).toThrow('later food values should remain unevaluated');
+    expect(() => iterator.next()).toThrow('later food revenue should remain unevaluated');
   });
 });
