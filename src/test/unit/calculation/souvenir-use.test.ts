@@ -65,6 +65,18 @@ describe('souvenir calculations', () => {
     expect(() => enumerateSouvenirQuantityPairs(500, [hat], -1)).toThrow(CalculationInputError);
   });
 
+  it('rejects a NaN quantity used', () => {
+    expect(() => createSouvenirUse(hat, Number.NaN)).toThrow(CalculationInputError);
+  });
+
+  it('rejects a fractional remaining gap', () => {
+    expect(() => enumerateSouvenirQuantityPairs(500.5, [hat], null)).toThrow(CalculationInputError);
+  });
+
+  it('rejects an unsafe diamond budget', () => {
+    expect(() => enumerateSouvenirQuantityPairs(500, [hat], Number.MAX_SAFE_INTEGER + 1)).toThrow(CalculationInputError);
+  });
+
   it('rejects a third souvenir instead of dropping it from the pair enumeration', () => {
     expect(() => enumerateSouvenirQuantityPairs(500, [hat, apron, hat], null)).toThrow(CalculationInputError);
   });
