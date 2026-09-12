@@ -1,4 +1,12 @@
-import { addSafeIntegers, ceilDivide, minSafeInteger, multiplySafeIntegers, subtractSafeIntegers } from './integers';
+import {
+  addSafeIntegers,
+  assertSafeInteger,
+  CalculationInputError,
+  ceilDivide,
+  minSafeInteger,
+  multiplySafeIntegers,
+  subtractSafeIntegers,
+} from './integers';
 import type { AllowedSouvenir, SouvenirUse } from './types';
 
 export interface CalculatedSouvenirUse {
@@ -7,6 +15,7 @@ export interface CalculatedSouvenirUse {
 }
 
 export function createSouvenirUse(souvenir: AllowedSouvenir, quantityUsed: number): CalculatedSouvenirUse {
+  assertSafeInteger(quantityUsed, 'quantityUsed');
   const inventoryConsumed = minSafeInteger(quantityUsed, souvenir.inventory);
   const quantityBeyondInventory = quantityUsed > souvenir.inventory
     ? subtractSafeIntegers(quantityUsed, souvenir.inventory)
@@ -54,6 +63,9 @@ export function enumerateSouvenirQuantityPairs(
   souvenirs: readonly AllowedSouvenir[],
   diamondBudgetRemaining: number | null,
 ): readonly (readonly number[])[] {
+  assertSafeInteger(remainingGap, 'remainingGap');
+  if (diamondBudgetRemaining !== null) assertSafeInteger(diamondBudgetRemaining, 'diamondBudgetRemaining');
+  if (souvenirs.length > 2) throw new CalculationInputError('souvenirs must contain at most 2 entries');
   if (souvenirs.length === 0) return remainingGap === 0 ? [[]] : [];
 
   const ordered = [...souvenirs].sort((left, right) => left.slot - right.slot);
