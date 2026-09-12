@@ -8,12 +8,13 @@
     "build:local": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --no-file-parallelism",
+    "test:watch": "vitest --no-file-parallelism",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "NODE_OPTIONS=--conditions=react-server tsx src/db/migrate.ts",
     "db:migrate:test": "NODE_OPTIONS=--conditions=react-server DATABASE_URL=$TEST_DATABASE_URL tsx src/db/migrate.ts",
-    "db:seed": "tsx src/db/seed/seed.ts"
+    "db:seed": "NODE_OPTIONS=--conditions=react-server tsx src/db/seed/seed.ts",
+    "data:build-new-york": "tsx src/db/seed/build-new-york-data.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
@@ -36,6 +37,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "xlsx": "^0.18.5"
   }
 }

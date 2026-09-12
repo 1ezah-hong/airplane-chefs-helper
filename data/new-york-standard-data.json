@@ -1,0 +1,300 @@
+{
+  "airport": {
+    "slug": "new-york",
+    "displayName": "纽约"
+  },
+  "levels": [
+    {
+      "levelNumber": 1,
+      "starTargetRevenue": 160
+    },
+    {
+      "levelNumber": 2,
+      "starTargetRevenue": 320
+    },
+    {
+      "levelNumber": 3,
+      "starTargetRevenue": 510
+    },
+    {
+      "levelNumber": 4,
+      "starTargetRevenue": 520
+    },
+    {
+      "levelNumber": 5,
+      "starTargetRevenue": 710
+    },
+    {
+      "levelNumber": 6,
+      "starTargetRevenue": 640
+    },
+    {
+      "levelNumber": 7,
+      "starTargetRevenue": 840
+    },
+    {
+      "levelNumber": 8,
+      "starTargetRevenue": 740
+    },
+    {
+      "levelNumber": 9,
+      "starTargetRevenue": 1040
+    },
+    {
+      "levelNumber": 10,
+      "starTargetRevenue": 1000
+    },
+    {
+      "levelNumber": 11,
+      "starTargetRevenue": 980
+    },
+    {
+      "levelNumber": 12,
+      "starTargetRevenue": 1080
+    },
+    {
+      "levelNumber": 13,
+      "starTargetRevenue": 1120
+    },
+    {
+      "levelNumber": 14,
+      "starTargetRevenue": 1260
+    },
+    {
+      "levelNumber": 15,
+      "starTargetRevenue": 1480
+    },
+    {
+      "levelNumber": 16,
+      "starTargetRevenue": 1330
+    },
+    {
+      "levelNumber": 17,
+      "starTargetRevenue": 1500
+    },
+    {
+      "levelNumber": 18,
+      "starTargetRevenue": 1560
+    },
+    {
+      "levelNumber": 19,
+      "starTargetRevenue": 1650
+    },
+    {
+      "levelNumber": 20,
+      "starTargetRevenue": 1720
+    },
+    {
+      "levelNumber": 21,
+      "starTargetRevenue": 1740
+    },
+    {
+      "levelNumber": 22,
+      "starTargetRevenue": 1820
+    },
+    {
+      "levelNumber": 23,
+      "starTargetRevenue": 1900
+    },
+    {
+      "levelNumber": 24,
+      "starTargetRevenue": 1820
+    },
+    {
+      "levelNumber": 25,
+      "starTargetRevenue": 1880
+    },
+    {
+      "levelNumber": 26,
+      "starTargetRevenue": 1870
+    },
+    {
+      "levelNumber": 27,
+      "starTargetRevenue": 1930
+    },
+    {
+      "levelNumber": 28,
+      "starTargetRevenue": 2110
+    },
+    {
+      "levelNumber": 29,
+      "starTargetRevenue": 2120
+    },
+    {
+      "levelNumber": 30,
+      "starTargetRevenue": 2290
+    },
+    {
+      "levelNumber": 31,
+      "starTargetRevenue": 2070
+    },
+    {
+      "levelNumber": 32,
+      "starTargetRevenue": 2190
+    },
+    {
+      "levelNumber": 33,
+      "starTargetRevenue": 2100
+    },
+    {
+      "levelNumber": 34,
+      "starTargetRevenue": 2290
+    },
+    {
+      "levelNumber": 35,
+      "starTargetRevenue": 2380
+    },
+    {
+      "levelNumber": 36,
+      "starTargetRevenue": 2350
+    },
+    {
+      "levelNumber": 37,
+      "starTargetRevenue": 2420
+    },
+    {
+      "levelNumber": 38,
+      "starTargetRevenue": 2410
+    },
+    {
+      "levelNumber": 39,
+      "starTargetRevenue": 2550
+    },
+    {
+      "levelNumber": 40,
+      "starTargetRevenue": 2680
+    },
+    {
+      "levelNumber": 41,
+      "starTargetRevenue": 2400
+    },
+    {
+      "levelNumber": 42,
+      "starTargetRevenue": 2730
+    },
+    {
+      "levelNumber": 43,
+      "starTargetRevenue": 2770
+    },
+    {
+      "levelNumber": 44,
+      "starTargetRevenue": 2910
+    },
+    {
+      "levelNumber": 45,
+      "starTargetRevenue": 2910
+    },
+    {
+      "levelNumber": 46,
+      "starTargetRevenue": 3000
+    },
+    {
+      "levelNumber": 47,
+      "starTargetRevenue": 3090
+    },
+    {
+      "levelNumber": 48,
+      "starTargetRevenue": 3060
+    },
+    {
+      "levelNumber": 49,
+      "starTargetRevenue": 3250
+    },
+    {
+      "levelNumber": 50,
+      "starTargetRevenue": 3400
+    }
+  ],
+  "foodCategories": [
+    {
+      "name": "配菜"
+    },
+    {
+      "name": "主食"
+    },
+    {
+      "name": "甜品"
+    },
+    {
+      "name": "饮料"
+    }
+  ],
+  "foods": [
+    {
+      "name": "泡菜",
+      "category": "配菜",
+      "displayOrder": 1
+    },
+    {
+      "name": "切片奶酪",
+      "category": "配菜",
+      "displayOrder": 2
+    },
+    {
+      "name": "蛤蜊杂烩",
+      "category": "配菜",
+      "displayOrder": 3
+    },
+    {
+      "name": "面包",
+      "category": "主食",
+      "displayOrder": 4
+    },
+    {
+      "name": "烟熏肉",
+      "category": "主食",
+      "displayOrder": 5
+    },
+    {
+      "name": "半月曲奇",
+      "category": "甜品",
+      "displayOrder": 6
+    },
+    {
+      "name": "芝士蛋糕",
+      "category": "甜品",
+      "displayOrder": 7
+    },
+    {
+      "name": "玻璃杯",
+      "category": "饮料",
+      "displayOrder": 8
+    },
+    {
+      "name": "奶油汽水",
+      "category": "饮料",
+      "displayOrder": 9
+    },
+    {
+      "name": "咖啡豆",
+      "category": "饮料",
+      "displayOrder": 10
+    },
+    {
+      "name": "咖啡杯",
+      "category": "饮料",
+      "displayOrder": 11
+    },
+    {
+      "name": "牛奶",
+      "category": "饮料",
+      "displayOrder": 12
+    }
+  ],
+  "souvenirs": [
+    {
+      "slot": 1,
+      "name": "自由帽",
+      "perItemRevenue": 60,
+      "packageSize": 5,
+      "diamondPackagePrice": 1
+    },
+    {
+      "slot": 2,
+      "name": "苹果徽章",
+      "perItemRevenue": 130,
+      "packageSize": 5,
+      "diamondPackagePrice": 2
+    }
+  ]
+}
