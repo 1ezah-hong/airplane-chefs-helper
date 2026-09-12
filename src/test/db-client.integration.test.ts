@@ -1,8 +1,5 @@
-import { config } from 'dotenv';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createDatabase } from '@/db/client';
-
-config({ path: '.env.local', quiet: true });
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
