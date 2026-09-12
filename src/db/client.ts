@@ -2,6 +2,7 @@ import 'server-only';
 
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { schema } from './schema';
 
 export function createDatabase(connectionString: string) {
   const sql = postgres(connectionString, {
@@ -10,7 +11,7 @@ export function createDatabase(connectionString: string) {
   });
 
   return {
-    db: drizzle(sql),
+    db: drizzle(sql, { schema }),
     sql,
     close: () => sql.end({ timeout: 5 }),
   };
