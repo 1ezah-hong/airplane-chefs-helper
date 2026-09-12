@@ -1,4 +1,4 @@
-import { addSafeIntegers, subtractSafeIntegers } from './integers';
+import { addSafeIntegers, assertSafeInteger, CalculationInputError, subtractSafeIntegers } from './integers';
 import type { FoodCandidate } from './types';
 
 export interface FoodSubset {
@@ -9,10 +9,13 @@ export interface FoodSubset {
 }
 
 export function calculateGap(targetRevenue: number, currentRevenue: number): number {
+  assertSafeInteger(targetRevenue, 'targetRevenue');
+  assertSafeInteger(currentRevenue, 'currentRevenue');
   return currentRevenue >= targetRevenue ? 0 : subtractSafeIntegers(targetRevenue, currentRevenue);
 }
 
 export function* enumerateFoodSubsets(foods: readonly FoodCandidate[]): Generator<FoodSubset> {
+  if (foods.length > 20) throw new CalculationInputError('foods must contain at most 20 entries');
   const orderedFoods = [...foods].sort((left, right) => left.displayOrder - right.displayOrder);
   for (let mask = 0; mask < 2 ** orderedFoods.length; mask += 1) {
     const selectedFoods = orderedFoods.filter((_, index) => (mask & (1 << index)) !== 0);
