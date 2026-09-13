@@ -11,6 +11,7 @@ import {
   calculatePlanAtBoundary,
   type PlayerRepositoryRunner,
 } from '@/server/actions/calculate-player-plan.boundary';
+import { calculatePlayerPlan } from '@/server/services/calculate-player-plan';
 
 const database = getTestDatabase();
 const runWithTestRepository: PlayerRepositoryRunner = async <T>(work: (repository: PlayerStandardDataRepository) => Promise<T>) =>
@@ -71,6 +72,76 @@ describe('calculatePlanAtBoundary', () => {
           diamondCost: 0,
         }],
       },
+    });
+  });
+
+  it('re-reads souvenir authority while retaining only player inventory', async () => {
+    const repository = createPlayerStandardDataRepository(database);
+    const data = await repository.getCalculatorData('new-york');
+    if (!data) throw new Error('Expected seeded calculator data');
+    const souvenir = data.souvenirs[0];
+    if (!souvenir) throw new Error('Expected seeded souvenir');
+
+    const state = await calculatePlanAtBoundary({
+      city: 'new-york',
+      levelNumber: '1',
+      currentRevenue: '100',
+      goldBudget: '',
+      diamondBudget: '0',
+      preference: 'gold_first',
+      foods: {},
+      souvenirs: {
+        [souvenir.id]: {
+          enabled: true,
+          inventory: '1',
+          name: 'forged',
+          perItemRevenue: 999,
+          packageSize: 99,
+          diamondPackagePrice: 999,
+        },
+      },
+    }, runWithTestRepository);
+
+    expect(state).toMatchObject({
+      ok: true,
+      data: {
+        status: 'success',
+        targetRevenue: 160,
+        souvenirUses: [{
+          slot: souvenir.slot,
+          name: souvenir.name,
+          inventoryConsumed: 1,
+          diamondCost: 0,
+        }],
+      },
+    });
+  });
+
+  it('adapts fresh database authority for direct service calls', async () => {
+    const repository = createPlayerStandardDataRepository(database);
+    const data = await repository.getCalculatorData('new-york');
+    if (!data) throw new Error('Expected seeded calculator data');
+    const food = data.foods[0];
+    if (!food) throw new Error('Expected seeded food');
+
+    await expect(calculatePlayerPlan({
+      city: 'new-york',
+      levelNumber: 1,
+      currentRevenue: 100,
+      goldBudget: 0,
+      diamondBudget: 0,
+      preference: 'gold_first',
+      foods: [{ id: food.id, revenueDelta: 60, goldCost: 0, diamondCost: 0 }],
+      souvenirs: [],
+    }, repository)).resolves.toMatchObject({
+      status: 'success',
+      targetRevenue: 160,
+      selectedFoods: [{
+        id: food.id,
+        name: food.name,
+        categoryName: food.categoryName,
+        displayOrder: food.displayOrder,
+      }],
     });
   });
 });

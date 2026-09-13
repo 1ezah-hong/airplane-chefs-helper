@@ -64,3 +64,40 @@ The complete non-integration test portion of the final suite passed: 70 tests in
 ## Concerns
 
 Integration tests still need a dedicated migrated disposable PostgreSQL URL through `TEST_DATABASE_URL`. The repository documents this as an intentional safety requirement. The worktree also has the unrelated unresolved `LayoutProps` TypeScript error in `src/app/layout.tsx`.
+
+## Review follow-up — no-candidate validation and authority regressions
+
+### Changed files
+
+- `src/server/services/calculate-player-plan.ts`
+- `src/server/actions/calculate-player-plan.boundary.ts`
+- `src/test/unit/calculate-player-plan.boundary.test.ts`
+- `src/test/integration/player-calculator.boundary.integration.test.ts`
+- `src/test/integration/player-standard-data.repository.integration.test.ts`
+
+### TDD evidence
+
+The new no-candidate Action-boundary test was run before the production fix. It failed with the expected defect: `{ code: 'ValidationError', message: '数值过大，请缩小收入、成本或库存后重试' }` rather than the required normal no-candidate validation message.
+
+After the minimal service guard and Action mapping, the focused suite passed:
+
+```text
+npm run test -- src/test/unit/calculate-player-plan.boundary.test.ts src/test/unit/player-calculator-validation.test.ts src/test/unit/player-standard-data.repository.test.ts
+Test Files  3 passed (3)
+Tests  13 passed (13)
+```
+
+The added database-backed cases could not run locally because `TEST_DATABASE_URL` remains unset; they terminate at the existing explicit database safety guard before executing test bodies.
+
+### Verification and self-review
+
+- `git diff --check`: passed.
+- `npm run lint`: passed.
+- Full `npm run test`: 73 tests in 9 files passed; five integration suites were blocked only by missing `TEST_DATABASE_URL`.
+- `npm exec tsc -- --noEmit`: blocked only by the unchanged `src/app/layout.tsx` `LayoutProps` error.
+- The no-candidate check occurs after `getCalculationAuthority` resolves the current server target and selected records, before exactly one unchanged engine call. It emits a dedicated service validation error which maps to the normal Action `ValidationError` envelope; arithmetic overflow retains its separate engine-error mapping.
+- Added regressions cover forged souvenir metadata, direct service authority adaptation, NotFound/Internal Action envelopes, empty food catalogs, stale souvenirs, and wrong-airport food/souvenir IDs. No schema, seed, canonical data, or engine code changed.
+
+### Follow-up commit
+
+`fix: validate player no-candidate requests`

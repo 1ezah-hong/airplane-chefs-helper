@@ -8,7 +8,7 @@ import {
   PlayerStandardDataNotFoundError,
   type PlayerStandardDataRepository,
 } from '@/server/repositories/player-standard-data.repository';
-import { calculatePlayerPlan } from '@/server/services/calculate-player-plan';
+import { calculatePlayerPlan, PlayerCalculationValidationError } from '@/server/services/calculate-player-plan';
 
 export type PlayerCalculationActionState =
   | { ok: true; data: CalculationResult }
@@ -29,6 +29,9 @@ export async function calculatePlanAtBoundary(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { ok: false, error: { code: 'ValidationError', message: '请检查输入。', fieldErrors: toFieldErrors(error.issues) } };
+    }
+    if (error instanceof PlayerCalculationValidationError) {
+      return { ok: false, error: { code: 'ValidationError', message: error.message } };
     }
     if (error instanceof CalculationInputError) {
       return { ok: false, error: { code: 'ValidationError', message: '数值过大，请缩小收入、成本或库存后重试' } };

@@ -2,6 +2,10 @@ import { calculateOptimalPlan, type CalculationInput, type CalculationResult } f
 import type { ParsedPlayerCalculationRequest } from '@/lib/validation/player-calculator';
 import type { PlayerStandardDataRepository } from '@/server/repositories/player-standard-data.repository';
 
+export class PlayerCalculationValidationError extends Error {
+  override name = 'PlayerCalculationValidationError';
+}
+
 export async function calculatePlayerPlan(
   parsed: ParsedPlayerCalculationRequest,
   authorityReader: PlayerStandardDataRepository,
@@ -30,5 +34,8 @@ export async function calculatePlayerPlan(
       diamondPackagePrice: souvenir.diamondPackagePrice,
     })),
   };
+  if (input.currentRevenue < input.targetRevenue && input.foods.length === 0 && input.souvenirs.length === 0) {
+    throw new PlayerCalculationValidationError('当前收入未达标时，至少选择一种食物或纪念品。');
+  }
   return calculateOptimalPlan(input);
 }
