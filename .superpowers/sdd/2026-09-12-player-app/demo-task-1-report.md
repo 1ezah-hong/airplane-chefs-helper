@@ -101,3 +101,20 @@ The added database-backed cases could not run locally because `TEST_DATABASE_URL
 ### Follow-up commit
 
 `fix: validate player no-candidate requests`
+
+## Final review follow-up — accurate seeded collection assertions
+
+### Changed files
+
+- `src/test/integration/player-standard-data.repository.integration.test.ts`
+
+### Verification and self-review
+
+- Replaced the invalid one-element nested-array matcher with explicit full-collection assertions: New York has 50 ordered levels (first is target 160) and 12 foods (first is 泡菜 in 配菜 at display order 1). Souvenir-slot facts remain asserted as a two-item collection.
+- The focused integration command could not run test bodies because `TEST_DATABASE_URL` is unset; its existing safety guard fails before database setup. As a result, a RED run cannot be performed locally for this database-only test correction.
+- `npm run lint`, `npm exec tsc -- --noEmit`, and `git diff --check` passed.
+- The adjustment is test-only and does not change repository, service, Action, database, seed, canonical data, or calculation-engine behavior.
+
+### Final review commit
+
+`test: assert complete player standard data`

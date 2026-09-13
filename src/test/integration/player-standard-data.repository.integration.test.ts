@@ -26,13 +26,13 @@ afterAll(async () => database.close());
 describe('Player standard data repository', () => {
   it('returns only complete ordered calculator data and resolves selected authority', async () => {
     const data = await repository.getCalculatorData('new-york');
-    expect(data).toMatchObject({
-      city: 'new-york',
-      levels: [{ number: 1, targetRevenue: 160 }],
-      foods: [{ name: '泡菜', categoryName: '配菜', displayOrder: 1 }],
-      souvenirs: [{ slot: 1, name: '自由帽' }, { slot: 2, name: '苹果徽章' }],
-    });
     if (!data?.foods[0] || !data.souvenirs[0]) throw new Error('Expected seeded authority');
+    expect(data.city).toBe('new-york');
+    expect(data.levels).toHaveLength(50);
+    expect(data.levels[0]).toEqual({ number: 1, targetRevenue: 160 });
+    expect(data.foods).toHaveLength(12);
+    expect(data.foods[0]).toMatchObject({ name: '泡菜', categoryName: '配菜', displayOrder: 1 });
+    expect(data.souvenirs).toMatchObject([{ slot: 1, name: '自由帽' }, { slot: 2, name: '苹果徽章' }]);
 
     await expect(repository.getCalculationAuthority({
       city: 'new-york',
