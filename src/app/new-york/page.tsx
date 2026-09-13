@@ -1,8 +1,10 @@
+import { connection } from 'next/server';
 import { calculatePlan } from '@/server/actions/calculate-player-plan';
 import { withPlayerStandardDataRepository } from '@/server/repositories/player-standard-data.runtime';
 import { CalculatorPageClient } from './calculator-page-client';
 
 export default async function NewYorkPage() {
+  await connection();
   const calculatorData = await withPlayerStandardDataRepository((repository) => repository.getCalculatorData('new-york'));
   if (!calculatorData) throw new Error('New York standard data is unavailable.');
 
