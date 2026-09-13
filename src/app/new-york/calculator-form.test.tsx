@@ -9,7 +9,7 @@ import { CalculatorForm } from './calculator-form';
 
 const calculatorData: CalculatorData = {
   city: 'new-york',
-  levels: [{ number: 1, targetRevenue: 160 }],
+  levels: [{ number: 1, targetRevenue: 160 }, { number: 2, targetRevenue: 320 }],
   foods: [{ id: 'food-1', name: '经典汉堡', categoryName: '汉堡', displayOrder: 1 }],
   souvenirs: [
     { id: 'souvenir-1', slot: 1, name: '自由女神像', perItemRevenue: 30, packageSize: 5, diamondPackagePrice: 10 },
@@ -28,9 +28,48 @@ const successfulAction = async (): Promise<PlayerCalculationActionState> => ({
   },
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
 
 describe('CalculatorForm', () => {
+  it('selects a level from its in-card custom listbox', async () => {
+    const user = userEvent.setup();
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    const trigger = screen.getByRole('combobox', { name: '关卡' });
+    expect(trigger.textContent).toContain('请选择关卡（1–50）');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+
+    await user.click(trigger);
+    expect(screen.getByRole('listbox', { name: '关卡选项' })).not.toBeNull();
+    await user.click(screen.getByRole('option', { name: '第 2 关' }));
+
+    expect(trigger.textContent).toContain('第 2 关');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+    expect(screen.getByLabelText('三星目标').textContent).toContain('320');
+  });
+
+  it('closes the open level listbox with Escape or an outside click', async () => {
+    const user = userEvent.setup();
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    const trigger = screen.getByRole('combobox', { name: '关卡' });
+    await user.click(trigger);
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(trigger.textContent).toContain('第 2 关');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+
+    await user.click(trigger);
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+
+    await user.click(trigger);
+    await user.click(screen.getByRole('heading', { name: '① 当前状态' }));
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+  });
+
   it('reveals numeric food fields only after that food is selected', async () => {
     const user = userEvent.setup();
     render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
@@ -110,6 +149,8 @@ describe('CalculatorForm', () => {
     const onResult = vi.fn();
     render(<CalculatorForm calculatorData={calculatorData} calculatePlan={async () => returned} onResult={onResult} />);
 
+    await user.click(screen.getByRole('combobox', { name: '关卡' }));
+    await user.click(screen.getByRole('option', { name: '第 1 关' }));
     await user.click(screen.getByRole('button', { name: '计算最佳方案' }));
 
     await waitFor(() => expect(onResult).toHaveBeenCalledWith(returned, '1'));

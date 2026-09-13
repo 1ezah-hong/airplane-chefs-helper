@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import type { PlayerCalculationActionState } from '@/server/actions/calculate-player-plan.boundary';
 import type { PlayerCalculationRequest } from '@/lib/validation/player-calculator';
 import type { CalculatorData } from '@/server/repositories/player-standard-data.repository';
@@ -14,9 +14,89 @@ type Props = {
 
 const field = 'w-full min-w-0 rounded-xl border border-[#D6E2ED] bg-white/90 px-3.5 py-3 text-[#13193D] outline-none focus-visible:ring-2 focus-visible:ring-[#2E6FA8]';
 
+type Level = CalculatorData['levels'][number];
+
+function LevelCombobox({ levels, value, onChange }: { levels: readonly Level[]; value: string; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selectedIndex = levels.findIndex((level) => String(level.number) === value);
+  const [activeIndex, setActiveIndex] = useState(() => Math.max(selectedIndex, 0));
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
+  const selected = levels[selectedIndex];
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsidePress);
+    return () => document.removeEventListener('pointerdown', closeOnOutsidePress);
+  }, [open]);
+
+  function openList() {
+    setActiveIndex(Math.max(selectedIndex, 0));
+    setOpen(true);
+  }
+
+  function choose(level: Level) {
+    onChange(String(level.number));
+    setOpen(false);
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === 'Escape') {
+      setOpen(false);
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!open) openList();
+      setActiveIndex((current) => Math.max(0, Math.min(levels.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1))));
+      return;
+    }
+    if ((event.key === 'Enter' || event.key === ' ') && open) {
+      event.preventDefault();
+      const level = levels[activeIndex];
+      if (level) choose(level);
+    }
+  }
+
+  return <div className="relative min-w-0" ref={rootRef}>
+    <span id={`${listboxId}-label`} className="block text-sm font-medium text-[#48607A]">关卡</span>
+    <button
+      type="button"
+      role="combobox"
+      aria-labelledby={`${listboxId}-label`}
+      aria-controls={listboxId}
+      aria-expanded={open}
+      aria-haspopup="listbox"
+      aria-activedescendant={open ? `${listboxId}-option-${activeIndex}` : undefined}
+      className={`${field} mt-1.5 flex min-h-12 items-center justify-between gap-3 text-left`}
+      onClick={() => open ? setOpen(false) : openList()}
+      onKeyDown={handleKeyDown}
+    >
+      <span className={selected ? undefined : 'text-[#7A93AC]'}>{selected ? `第 ${selected.number} 关` : '请选择关卡（1–50）'}</span>
+      <span aria-hidden="true" className={`shrink-0 text-[#7A93AC] transition-transform ${open ? 'rotate-180' : ''}`}>⌄</span>
+    </button>
+    {open && <div className="absolute inset-x-0 z-20 mt-2 overflow-hidden rounded-xl border border-[#D6E2ED] bg-white shadow-[0_8px_24px_rgba(19,25,61,.16)]">
+      <div id={listboxId} role="listbox" aria-label="关卡选项" className="max-h-64 overflow-y-auto overscroll-contain p-1">
+        {levels.map((level, index) => <div
+          key={level.number}
+          id={`${listboxId}-option-${index}`}
+          role="option"
+          aria-selected={level.number === selected?.number}
+          className={`flex min-h-12 cursor-pointer items-center rounded-lg px-3 text-sm ${level.number === selected?.number ? 'bg-[#E4EFF8] font-semibold text-[#1E5A8A]' : index === activeIndex ? 'bg-[#F5F9FC] text-[#13193D]' : 'text-[#41566D]'}`}
+          onMouseEnter={() => setActiveIndex(index)}
+          onClick={() => choose(level)}
+        >第 {level.number} 关</div>)}
+      </div>
+    </div>}
+  </div>;
+}
+
 function defaults(data: CalculatorData): PlayerCalculationRequest {
   return {
-    city: data.city, levelNumber: String(data.levels[0]?.number ?? 1), currentRevenue: '0', goldBudget: '', diamondBudget: '', preference: 'gold_first',
+    city: data.city, levelNumber: '', currentRevenue: '0', goldBudget: '', diamondBudget: '', preference: 'gold_first',
     foods: Object.fromEntries(data.foods.map((food) => [food.id, { selected: false, revenueDelta: '', goldCost: '', diamondCost: '' }])),
     souvenirs: Object.fromEntries(data.souvenirs.map((souvenir) => [souvenir.id, { enabled: false, inventory: '' }])),
   };
@@ -75,9 +155,7 @@ export function CalculatorForm({ calculatorData, calculatePlan, onResult }: Prop
     <section className="rounded-[26px] border border-white/80 bg-white/40 p-4 shadow-[0_8px_30px_rgba(19,25,61,.1)] backdrop-blur-xl">
       <h2 className="mb-4 text-base font-semibold text-[#13193D]">① 当前状态</h2>
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-[#48607A]" htmlFor="level-number">关卡
-          <select id="level-number" className={`${field} mt-1.5`} value={request.levelNumber} onChange={(event) => setRoot('levelNumber', event.currentTarget.value)}>{calculatorData.levels.map((item) => <option key={item.number} value={item.number}>第 {item.number} 关</option>)}</select>
-        </label>
+        <LevelCombobox levels={calculatorData.levels} value={request.levelNumber} onChange={(value) => setRoot('levelNumber', value)} />
         <div className="flex items-center justify-between rounded-xl bg-white/55 px-3.5 py-3" aria-label="三星目标"><span className="text-sm font-medium text-[#48607A]">★★★ 三星目标</span><strong className="text-xl text-[#13193D]">{level?.targetRevenue ?? '—'}</strong></div>
         <NumberField id="current-revenue" label="当前总收入" value={request.currentRevenue} onChange={(value) => setRoot('currentRevenue', value)} error={errors.currentRevenue} />
       </div>
