@@ -1,0 +1,1 @@
+export const NEW_YORK_PAGE_SHELL = 'min-h-dvh min-w-0 bg-[radial-gradient(circle_at_top,#96C4E466,transparent_45%),linear-gradient(#F5F8FB,#D7E4EE)] px-4 pt-[max(3rem,env(safe-area-inset-top))] text-[#13193D]';

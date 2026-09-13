@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { CalculationResult } from '@/domain/calculation';
 import { readPlayerResultSnapshot, type PlayerResultSnapshot } from '../browser-storage';
+import { NEW_YORK_PAGE_SHELL } from '../page-shell';
 
 const card = 'rounded-[26px] border border-white/80 bg-white/40 p-4 shadow-[0_8px_30px_rgba(19,25,61,.1)] backdrop-blur-xl';
 const metric = 'rounded-xl bg-white/60 p-3';
@@ -56,7 +57,7 @@ export function ResultPage() {
     return () => window.clearTimeout(readSnapshot);
   }, []);
 
-  return <main className="min-h-dvh min-w-0 bg-[radial-gradient(circle_at_top,#96C4E466,transparent_45%),linear-gradient(#F5F8FB,#D7E4EE)] px-4 pt-12 pb-[max(7rem,calc(env(safe-area-inset-bottom)+6rem))] text-[#13193D] md:pb-8">
+  return <main className={`${NEW_YORK_PAGE_SHELL} pb-[max(7rem,calc(env(safe-area-inset-bottom)+6rem))] md:pb-8`}>
     <div className="mx-auto min-w-0 space-y-4">{snapshot ? <ResultContent snapshot={snapshot} /> : <section className={card}><h1 className="text-xl font-semibold text-[#13193D]">暂无可显示的计算结果。</h1><p className="mt-2 text-sm text-[#48607A]">请返回计算器填写数据后重新计算。</p><div className="mt-4"><ReturnLink label="返回计算器" /></div></section>}</div>
   </main>;
 }
