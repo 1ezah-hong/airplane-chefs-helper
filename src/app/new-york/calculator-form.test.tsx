@@ -94,4 +94,37 @@ describe('CalculatorForm', () => {
     resolveAction?.({ ok: false, error: { code: 'InternalError', message: '暂时无法计算，请重试。' } });
     await waitFor(() => expect(screen.getByText('暂时无法计算，请重试。')).not.toBeNull());
   });
+
+  it('passes the exact returned result to its success callback', async () => {
+    const user = userEvent.setup();
+    const returned: PlayerCalculationActionState = {
+      ok: true,
+      data: { status: 'already_starred', currentRevenue: 160, targetRevenue: 160, gap: 0, preference: 'gold_first' },
+    };
+    const onResult = vi.fn();
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={async () => returned} onResult={onResult} />);
+
+    await user.click(screen.getByRole('button', { name: '计算最佳方案' }));
+
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith(returned, '1'));
+  });
+
+  it('restores the current raw draft without coercing numeric strings', async () => {
+    window.localStorage.setItem('airplane-chefs:new-york:draft', JSON.stringify({
+      city: 'new-york', levelNumber: '1', currentRevenue: '00150', goldBudget: '', diamondBudget: '04', preference: 'diamond_first',
+      foods: { 'food-1': { selected: true, revenueDelta: '060', goldCost: '90', diamondCost: '3' } },
+      souvenirs: {
+        'souvenir-1': { enabled: true, inventory: '02' },
+        'souvenir-2': { enabled: false, inventory: '' },
+      },
+    }));
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    await waitFor(() => expect((screen.getByLabelText('当前总收入') as HTMLInputElement).value).toBe('00150'));
+    expect((screen.getByLabelText('钻石预算（可留空）') as HTMLInputElement).value).toBe('04');
+    expect(screen.getByRole('button', { name: '优先省钻石' })).toHaveProperty('ariaPressed', 'true');
+    expect((screen.getByLabelText('经典汉堡收入增量') as HTMLInputElement).value).toBe('060');
+    expect((screen.getByLabelText('自由女神像库存') as HTMLInputElement).value).toBe('02');
+    window.localStorage.clear();
+  });
 });

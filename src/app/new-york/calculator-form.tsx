@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import type { PlayerCalculationActionState } from '@/server/actions/calculate-player-plan.boundary';
 import type { PlayerCalculationRequest } from '@/lib/validation/player-calculator';
 import type { CalculatorData } from '@/server/repositories/player-standard-data.repository';
+import { readPlayerDraft, savePlayerDraft } from './browser-storage';
 
 type Props = {
   calculatorData: CalculatorData;
   calculatePlan: (raw: PlayerCalculationRequest) => Promise<PlayerCalculationActionState>;
-  onResult?: (result: Extract<PlayerCalculationActionState, { ok: true }>) => void;
+  onResult?: (result: Extract<PlayerCalculationActionState, { ok: true }>, levelNumber: string) => void;
 };
 
 const field = 'w-full min-w-0 rounded-xl border border-[#D6E2ED] bg-white/90 px-3.5 py-3 text-[#13193D] outline-none focus-visible:ring-2 focus-visible:ring-[#2E6FA8]';
@@ -33,10 +34,23 @@ function NumberField({ id, label, value, onChange, error }: { id: string; label:
 
 export function CalculatorForm({ calculatorData, calculatePlan, onResult }: Props) {
   const [request, setRequest] = useState(() => defaults(calculatorData));
+  const [draftReady, setDraftReady] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string>();
   const [errors, setErrors] = useState<Record<string, readonly string[]>>({});
   const level = calculatorData.levels.find((candidate) => candidate.number === Number(request.levelNumber));
+
+  useEffect(() => {
+    const restoreDraft = window.setTimeout(() => {
+      setRequest((current) => readPlayerDraft(current));
+      setDraftReady(true);
+    });
+    return () => window.clearTimeout(restoreDraft);
+  }, []);
+
+  useEffect(() => {
+    if (draftReady) savePlayerDraft(request);
+  }, [draftReady, request]);
 
   const setRoot = (key: 'levelNumber' | 'currentRevenue' | 'goldBudget' | 'diamondBudget', value: string) => setRequest((current) => ({ ...current, [key]: value }));
   const updateFood = (id: string, patch: Partial<PlayerCalculationRequest['foods'][string]>) => setRequest((current) => ({ ...current, foods: { ...current.foods, [id]: { ...current.foods[id], ...patch } } }));
@@ -48,7 +62,7 @@ export function CalculatorForm({ calculatorData, calculatePlan, onResult }: Prop
     setPending(true); setMessage(undefined); setErrors({});
     try {
       const result = await calculatePlan(request);
-      if (result.ok) onResult?.(result);
+      if (result.ok) onResult?.(result, request.levelNumber);
       else {
         setMessage(result.error.message);
         setErrors(result.error.code === 'ValidationError' ? result.error.fieldErrors ?? {} : {});
