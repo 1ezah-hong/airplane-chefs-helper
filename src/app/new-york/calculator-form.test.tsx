@@ -1,0 +1,177 @@
+// @vitest-environment jsdom
+
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { CalculatorData } from '@/server/repositories/player-standard-data.repository';
+import type { PlayerCalculationActionState } from '@/server/actions/calculate-player-plan.boundary';
+import { CalculatorForm } from './calculator-form';
+
+const calculatorData: CalculatorData = {
+  city: 'new-york',
+  levels: [{ number: 1, targetRevenue: 160 }, { number: 2, targetRevenue: 320 }],
+  foods: [{ id: 'food-1', name: '经典汉堡', categoryName: '汉堡', displayOrder: 1 }],
+  souvenirs: [
+    { id: 'souvenir-1', slot: 1, name: '自由女神像', perItemRevenue: 30, packageSize: 5, diamondPackagePrice: 10 },
+    { id: 'souvenir-2', slot: 2, name: '中央公园雪球', perItemRevenue: 20, packageSize: 5, diamondPackagePrice: 8 },
+  ],
+};
+
+const successfulAction = async (): Promise<PlayerCalculationActionState> => ({
+  ok: true,
+  data: {
+    status: 'already_starred',
+    currentRevenue: 160,
+    targetRevenue: 160,
+    gap: 0,
+    preference: 'gold_first',
+  },
+});
+
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
+
+describe('CalculatorForm', () => {
+  it('selects a level from its in-card custom listbox', async () => {
+    const user = userEvent.setup();
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    const trigger = screen.getByRole('combobox', { name: '关卡' });
+    expect(trigger.textContent).toContain('请选择关卡（1–50）');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+
+    await user.click(trigger);
+    expect(screen.getByRole('listbox', { name: '关卡选项' })).not.toBeNull();
+    await user.click(screen.getByRole('option', { name: '第 2 关' }));
+
+    expect(trigger.textContent).toContain('第 2 关');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+    expect(screen.getByLabelText('三星目标').textContent).toContain('320');
+  });
+
+  it('closes the open level listbox with Escape or an outside click', async () => {
+    const user = userEvent.setup();
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    const trigger = screen.getByRole('combobox', { name: '关卡' });
+    await user.click(trigger);
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(trigger.textContent).toContain('第 2 关');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+
+    await user.click(trigger);
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+
+    await user.click(trigger);
+    await user.click(screen.getByRole('heading', { name: '① 当前状态' }));
+    expect(screen.queryByRole('listbox', { name: '关卡选项' })).toBeNull();
+  });
+
+  it('reveals numeric food fields only after that food is selected', async () => {
+    const user = userEvent.setup();
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    expect(screen.queryByLabelText('经典汉堡收入增量')).toBeNull();
+
+    await user.click(screen.getByRole('checkbox', { name: '选择经典汉堡' }));
+
+    expect(screen.getByLabelText('经典汉堡收入增量')).not.toBeNull();
+    expect(screen.getByLabelText('经典汉堡金币成本')).not.toBeNull();
+    expect(screen.getByLabelText('经典汉堡钻石成本')).not.toBeNull();
+  });
+
+  it('keeps an enabled souvenir inventory blank and displays the returned field error', async () => {
+    const user = userEvent.setup();
+    const action = vi.fn(async (): Promise<PlayerCalculationActionState> => ({
+      ok: false,
+      error: {
+        code: 'ValidationError',
+        message: '请检查输入。',
+        fieldErrors: {
+          'souvenirs.souvenir-1.inventory': ['允许使用纪念品时必须填写允许为 0 的非负整数库存'],
+        },
+      },
+    }));
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={action} />);
+
+    await user.click(screen.getByRole('checkbox', { name: '允许使用自由女神像' }));
+    expect(screen.getByText('第 1 槽 · 每件收入 30')).not.toBeNull();
+    expect(screen.getByText('5 件 / 包 · 10 钻石 / 包')).not.toBeNull();
+    expect(screen.getByText('留空会提示填写；库存填 0 表示没有现存库存，仍可购买整包。')).not.toBeNull();
+    expect((screen.getByLabelText('自由女神像库存') as HTMLInputElement).value).toBe('');
+
+    await user.click(screen.getByRole('button', { name: '计算最佳方案' }));
+
+    expect(await screen.findByText('允许使用纪念品时必须填写允许为 0 的非负整数库存')).not.toBeNull();
+    expect((screen.getByLabelText('自由女神像库存') as HTMLInputElement).value).toBe('');
+    expect(action).toHaveBeenCalledWith(expect.objectContaining({
+      souvenirs: {
+        'souvenir-1': { enabled: true, inventory: '' },
+        'souvenir-2': { enabled: false, inventory: '' },
+      },
+    }));
+  });
+
+  it('disables a second submission while the first calculation is pending', async () => {
+    const user = userEvent.setup();
+    let resolveAction: ((state: PlayerCalculationActionState) => void) | undefined;
+    const action = vi.fn(() => new Promise<PlayerCalculationActionState>((resolve) => {
+      resolveAction = resolve;
+    }));
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={action} />);
+
+    const submit = screen.getByRole('button', { name: '计算最佳方案' });
+    await user.click(submit);
+    await user.click(submit);
+
+    expect(screen.getByRole('button', { name: '计算中…' })).toHaveProperty('disabled', true);
+    expect(action).toHaveBeenCalledTimes(1);
+
+    resolveAction?.({ ok: false, error: { code: 'InternalError', message: '暂时无法计算，请重试。' } });
+    await waitFor(() => expect(screen.getByText('暂时无法计算，请重试。')).not.toBeNull());
+  });
+
+  it('keeps the calculation action available in a fixed mobile-safe action bar', () => {
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    expect(screen.getByRole('button', { name: '计算最佳方案' }).parentElement?.classList.contains('fixed')).toBe(true);
+  });
+
+  it('passes the exact returned result to its success callback', async () => {
+    const user = userEvent.setup();
+    const returned: PlayerCalculationActionState = {
+      ok: true,
+      data: { status: 'already_starred', currentRevenue: 160, targetRevenue: 160, gap: 0, preference: 'gold_first' },
+    };
+    const onResult = vi.fn();
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={async () => returned} onResult={onResult} />);
+
+    await user.click(screen.getByRole('combobox', { name: '关卡' }));
+    await user.click(screen.getByRole('option', { name: '第 1 关' }));
+    await user.click(screen.getByRole('button', { name: '计算最佳方案' }));
+
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith(returned, '1'));
+  });
+
+  it('restores the current raw draft without coercing numeric strings', async () => {
+    window.localStorage.setItem('airplane-chefs:new-york:draft', JSON.stringify({
+      city: 'new-york', levelNumber: '1', currentRevenue: '00150', goldBudget: '', diamondBudget: '04', preference: 'diamond_first',
+      foods: { 'food-1': { selected: true, revenueDelta: '060', goldCost: '90', diamondCost: '3' } },
+      souvenirs: {
+        'souvenir-1': { enabled: true, inventory: '02' },
+        'souvenir-2': { enabled: false, inventory: '' },
+      },
+    }));
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    await waitFor(() => expect((screen.getByLabelText('当前总收入') as HTMLInputElement).value).toBe('00150'));
+    expect((screen.getByLabelText('钻石预算（可留空）') as HTMLInputElement).value).toBe('04');
+    expect(screen.getByRole('button', { name: '优先省钻石' })).toHaveProperty('ariaPressed', 'true');
+    expect((screen.getByLabelText('经典汉堡收入增量') as HTMLInputElement).value).toBe('060');
+    expect((screen.getByLabelText('自由女神像库存') as HTMLInputElement).value).toBe('02');
+    window.localStorage.clear();
+  });
+});
