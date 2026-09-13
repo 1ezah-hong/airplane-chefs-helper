@@ -13,7 +13,7 @@ function NumberMetric({ label, value }: { label: string; value: number }) {
 }
 
 function ReturnLink({ label = '返回并修改输入' }: { label?: string }) {
-  return <Link className="block w-full rounded-[18px] bg-[#13193D] px-4 py-4 text-center text-base font-semibold text-[#F8F2EA] shadow-[0_8px_24px_rgba(19,25,61,.28)]" href="/new-york">{label}</Link>;
+  return <div className="fixed inset-x-0 bottom-0 z-10 border-t border-white/70 bg-[#F5F8FB]/85 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"><Link className="block w-full rounded-[18px] bg-[#13193D] px-4 py-4 text-center text-base font-semibold text-[#F8F2EA] shadow-[0_8px_24px_rgba(19,25,61,.28)]" href="/new-york">{label}</Link></div>;
 }
 
 function ResultHeader({ levelNumber, title, summary }: { levelNumber: number; title: string; summary: string }) {
@@ -56,7 +56,7 @@ export function ResultPage() {
     return () => window.clearTimeout(readSnapshot);
   }, []);
 
-  return <main className="min-h-dvh min-w-0 bg-[radial-gradient(circle_at_top,#96C4E466,transparent_45%),linear-gradient(#F5F8FB,#D7E4EE)] px-4 pt-12 pb-[max(2rem,calc(env(safe-area-inset-bottom)+1.25rem))] text-[#13193D]">
+  return <main className="min-h-dvh min-w-0 bg-[radial-gradient(circle_at_top,#96C4E466,transparent_45%),linear-gradient(#F5F8FB,#D7E4EE)] px-4 pt-12 pb-[max(7rem,calc(env(safe-area-inset-bottom)+6rem))] text-[#13193D] md:pb-8">
     <div className="mx-auto min-w-0 space-y-4">{snapshot ? <ResultContent snapshot={snapshot} /> : <section className={card}><h1 className="text-xl font-semibold text-[#13193D]">暂无可显示的计算结果。</h1><p className="mt-2 text-sm text-[#48607A]">请返回计算器填写数据后重新计算。</p><div className="mt-4"><ReturnLink label="返回计算器" /></div></section>}</div>
   </main>;
 }

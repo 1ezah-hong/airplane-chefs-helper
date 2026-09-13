@@ -95,6 +95,12 @@ describe('CalculatorForm', () => {
     await waitFor(() => expect(screen.getByText('暂时无法计算，请重试。')).not.toBeNull());
   });
 
+  it('keeps the calculation action available in a fixed mobile-safe action bar', () => {
+    render(<CalculatorForm calculatorData={calculatorData} calculatePlan={successfulAction} />);
+
+    expect(screen.getByRole('button', { name: '计算最佳方案' }).parentElement?.classList.contains('fixed')).toBe(true);
+  });
+
   it('passes the exact returned result to its success callback', async () => {
     const user = userEvent.setup();
     const returned: PlayerCalculationActionState = {

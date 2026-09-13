@@ -71,7 +71,7 @@ export function CalculatorForm({ calculatorData, calculatePlan, onResult }: Prop
     finally { setPending(false); }
   }
 
-  return <form className="min-w-0 space-y-4 pb-[max(5rem,calc(env(safe-area-inset-bottom)+1.25rem))]" onSubmit={submit} noValidate>
+  return <form className="min-w-0 space-y-4 pb-[max(6.5rem,calc(env(safe-area-inset-bottom)+5.5rem))] md:pb-6" onSubmit={submit} noValidate>
     <section className="rounded-[26px] border border-white/80 bg-white/40 p-4 shadow-[0_8px_30px_rgba(19,25,61,.1)] backdrop-blur-xl">
       <h2 className="mb-4 text-base font-semibold text-[#13193D]">① 当前状态</h2>
       <div className="space-y-3">
@@ -124,6 +124,8 @@ export function CalculatorForm({ calculatorData, calculatePlan, onResult }: Prop
       </div>
     </section>
     {message && <p className="rounded-xl border border-[#B5452F]/30 bg-[#FBEAE4] p-3 text-sm text-[#B5452F]" role="alert">{message}</p>}
-    <button className="w-full rounded-[18px] bg-[#13193D] px-4 py-4 text-base font-semibold text-[#F8F2EA] shadow-[0_8px_24px_rgba(19,25,61,.28)] disabled:cursor-not-allowed disabled:opacity-70" type="submit" disabled={pending}>{pending ? '计算中…' : '计算最佳方案'}</button>
+    <div className="fixed inset-x-0 bottom-0 z-10 border-t border-white/70 bg-[#F5F8FB]/85 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+      <button className="w-full rounded-[18px] bg-[#13193D] px-4 py-4 text-base font-semibold text-[#F8F2EA] shadow-[0_8px_24px_rgba(19,25,61,.28)] disabled:cursor-not-allowed disabled:opacity-70" type="submit" disabled={pending}>{pending ? '计算中…' : '计算最佳方案'}</button>
+    </div>
   </form>;
 }

@@ -46,6 +46,12 @@ describe('ResultPage', () => {
     expect(screen.queryByText('升级食物')).toBeNull();
   });
 
+  it('keeps the return action available in a fixed mobile-safe action bar', async () => {
+    renderStoredResult({ status: 'already_starred', preference: 'gold_first', targetRevenue: 160, currentRevenue: 180, gap: 0 });
+
+    expect((await screen.findByRole('link', { name: '返回并修改输入' })).parentElement?.classList.contains('fixed')).toBe(true);
+  });
+
   it('shows only returned no-solution figures rather than a fake plan', async () => {
     renderStoredResult({ status: 'no_solution', preference: 'diamond_first', targetRevenue: 300, currentRevenue: 180, gap: 120, maxAdditionalRevenue: 80 });
 
