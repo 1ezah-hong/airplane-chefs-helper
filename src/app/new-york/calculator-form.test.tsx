@@ -59,6 +59,9 @@ describe('CalculatorForm', () => {
     render(<CalculatorForm calculatorData={calculatorData} calculatePlan={action} />);
 
     await user.click(screen.getByRole('checkbox', { name: '允许使用自由女神像' }));
+    expect(screen.getByText('第 1 槽 · 每件收入 30')).not.toBeNull();
+    expect(screen.getByText('5 件 / 包 · 10 钻石 / 包')).not.toBeNull();
+    expect(screen.getByText('留空会提示填写；库存填 0 表示没有现存库存，仍可购买整包。')).not.toBeNull();
     expect((screen.getByLabelText('自由女神像库存') as HTMLInputElement).value).toBe('');
 
     await user.click(screen.getByRole('button', { name: '计算最佳方案' }));

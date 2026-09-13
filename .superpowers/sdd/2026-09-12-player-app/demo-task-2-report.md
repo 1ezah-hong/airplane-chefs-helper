@@ -33,3 +33,12 @@
 ## Concerns
 
 - Vitest emits the existing Vite `configLoader: 'native'` future-compatibility warning because `vitest.config.ts` uses ESM syntax in a CommonJS package context. It does not affect the passing checks and is outside this task's scope.
+
+## Reviewer fix round 1 — Souvenir authority and zero-inventory guidance
+
+- `src/app/new-york/calculator-form.tsx` now shows the enabled souvenir's read-only slot, per-item revenue, package size, and diamond package price. It also explains that blank inventory requires entry, while `0` means no owned inventory and still permits purchasing a package. No authority field or quantity input was added.
+- `src/app/new-york/calculator-form.test.tsx` was extended first to require those DB-supplied values and the blank-versus-zero guidance after enabling a souvenir.
+- RED: `npm test -- src/app/new-york/calculator-form.test.tsx` failed because the authority and guidance text was absent.
+- GREEN: the same focused suite passed, 3 tests.
+- Verification: `npm run lint`, `npx next typegen && npx tsc --noEmit`, and `git diff --check` passed.
+- Commit: `fix: show enabled souvenir authority details`

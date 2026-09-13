@@ -98,7 +98,14 @@ export function CalculatorForm({ calculatorData, calculatePlan, onResult }: Prop
       <h2 className="mb-1 text-base font-semibold text-[#13193D]">④ 纪念品</h2><p className="mb-3 text-xs text-[#7A93AC]">仅填写可用库存；标准属性由系统维护。</p><div className="space-y-3">
         {calculatorData.souvenirs.map((souvenir) => { const value = request.souvenirs[souvenir.id]; if (!value) return null; return <div key={souvenir.id} className="rounded-2xl border border-[#E1EAF2] bg-white/40 p-3">
           <label className="flex cursor-pointer items-center gap-3 text-sm text-[#41566D]" htmlFor={`souvenir-${souvenir.id}`}><input id={`souvenir-${souvenir.id}`} type="checkbox" aria-label={`允许使用${souvenir.name}`} checked={value.enabled} onChange={(event) => updateSouvenir(souvenir.id, { enabled: event.currentTarget.checked })} /><span>{souvenir.name}</span></label>
-          {value.enabled && <div className="mt-3 border-t border-[#E1EAF2] pt-3"><NumberField id={`${souvenir.id}-inventory`} label={`${souvenir.name}库存`} value={value.inventory} onChange={(inventory) => updateSouvenir(souvenir.id, { inventory })} error={errors[`souvenirs.${souvenir.id}.inventory`]} /></div>}
+          {value.enabled && <div className="mt-3 border-t border-[#E1EAF2] pt-3">
+            <div className="mb-3 rounded-xl bg-[#F5F9FC] px-3 py-2 text-xs text-[#48607A]">
+              <p>第 {souvenir.slot} 槽 · 每件收入 {souvenir.perItemRevenue}</p>
+              <p>{souvenir.packageSize} 件 / 包 · {souvenir.diamondPackagePrice} 钻石 / 包</p>
+            </div>
+            <NumberField id={`${souvenir.id}-inventory`} label={`${souvenir.name}库存`} value={value.inventory} onChange={(inventory) => updateSouvenir(souvenir.id, { inventory })} error={errors[`souvenirs.${souvenir.id}.inventory`]} />
+            <p className="mt-1 text-xs text-[#7A93AC]">留空会提示填写；库存填 0 表示没有现存库存，仍可购买整包。</p>
+          </div>}
         </div>; })}
       </div>
     </section>
